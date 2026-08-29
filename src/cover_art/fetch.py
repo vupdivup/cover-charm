@@ -103,6 +103,32 @@ def search_albums(
     return albums
 
 
+def find_album(
+    title: str,
+    artist: str | None = None,
+    year: int | None = None,
+    *,
+    country: str = "US",
+) -> Album | None:
+    """Return the best-match Album for the query, or None."""
+    albums = search_albums(title, artist, year, country=country)
+    return albums[0] if albums else None
+
+
+def artwork_url(album: Album, *, size: int = 600) -> str:
+    """Return ``album``'s artwork URL resized to ``size``x``size``."""
+    return album.artwork_url.replace(_ARTWORK_TOKEN, f"{size}x{size}bb")
+
+
+def download_url(url: str) -> bytes:
+    """GET raw bytes from an artwork URL."""
+    headers = {"User-Agent": _USER_AGENT}
+    with httpx.Client(headers=headers, timeout=10.0) as client:
+        response = client.get(url)
+        response.raise_for_status()
+        return response.content
+
+
 def find_cover_url(
     title: str,
     artist: str | None = None,
@@ -112,10 +138,10 @@ def find_cover_url(
     country: str = "US",
 ) -> str | None:
     """Return the best-match album's artwork URL at ``size``x``size``, or None."""
-    albums = search_albums(title, artist, year, country=country)
-    if not albums:
+    album = find_album(title, artist, year, country=country)
+    if album is None:
         return None
-    return albums[0].artwork_url.replace(_ARTWORK_TOKEN, f"{size}x{size}bb")
+    return artwork_url(album, size=size)
 
 
 def download_cover(
@@ -132,8 +158,4 @@ def download_cover(
         raise CoverArtNotFound(
             f"no album found for title={title!r} artist={artist!r} year={year!r}"
         )
-    headers = {"User-Agent": _USER_AGENT}
-    with httpx.Client(headers=headers, timeout=10.0) as client:
-        response = client.get(url)
-        response.raise_for_status()
-        return response.content
+    return download_url(url)

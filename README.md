@@ -1,8 +1,9 @@
 # cover-art
 
 Fetch album cover art, normalize it to a fixed square size, and upload
-it to Cloudflare R2. Three independent modules, each with a CLI
-subcommand and a Python API.
+it to Cloudflare R2. Three independent modules (fetch, normalize,
+upload), each with a CLI subcommand and a Python API, plus a fourth
+`publish` module that chains all three into one call.
 
 ## Install
 
@@ -134,13 +135,39 @@ key = upload_file("cover.jpg")  # key defaults to the file's basename
 
 Exports: `R2Config`, `R2ConfigError`, `upload_bytes`, `upload_file`.
 
-## Composing modules
+## publish
 
-The modules don't call each other, so wire them together by hand:
+The only module that depends on the other three — fetch, normalize,
+and upload stay independent of each other and of this one. `publish`
+looks up an album, normalizes its cover, and uploads it, all in memory:
+nothing touches disk unless `--save`/`save=` is given.
+
+The object key defaults to a slug built from the *matched* album (not
+your typed query), e.g. `miles-davis-kind-of-blue.jpg`; pass `--key`/
+`key=` to override, or `--prefix`/`prefix=` to namespace it (e.g.
+`covers/`). R2 credentials/bucket are resolved right before the upload
+step, so `--save` still gets you a normalized file even without R2 set
+up.
+
+**CLI:**
+
+```
+cover-art publish "Kind of Blue" --artist "Miles Davis" --year 1959 --prefix covers/
+```
+
+Options: `--artist`, `--year`, `--country` (all narrow the iTunes
+match), `--size`, `--mode` (same as `normalize`), `--key`, `--prefix`,
+`--save` (also write the normalized image locally), `--bucket`
+(overrides `R2_BUCKET`). Prints the matched album to stderr and the
+uploaded key to stdout.
+
+**Python API:**
 
 ```python
-from cover_art import download_cover, normalize_image, upload_bytes
+from cover_art import publish_cover
 
-data = normalize_image(download_cover("Kind of Blue", artist="Miles Davis"))
-key = upload_bytes(data, "covers/kind-of-blue.jpg")
+result = publish_cover("Kind of Blue", artist="Miles Davis", prefix="covers/")
+print(result.key, result.album)
 ```
+
+Exports: `publish_cover`, `PublishResult`, `default_key`.
