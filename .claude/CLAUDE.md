@@ -2,10 +2,34 @@
 
 ## Overview
 
-`cover-art` fetches album cover art from iTunes, normalizes it to a
+This repo hosts two packages under `src/`, sharing one `pyproject.toml`.
+
+`cover_art` fetches album cover art from iTunes, normalizes it to a
 square, and uploads it to Cloudflare R2. `fetch`, `normalize`, and
 `upload` are independent modules; `pipeline` composes them; `cli` is
 the entry point. See `src/cover_art/README.md` for full usage.
+
+`rym_albums` downloads the RateYourMusic top-albums Kaggle dataset and
+exports the most-reviewed albums in the shape `cover_art` expects.
+`download`, `select`, and `export` are independent modules; `pipeline`
+composes them; `cli` is the entry point. See `src/rym_albums/README.md`
+for full usage.
+
+## Architecture
+
+New packages in this repo follow the same planning method:
+
+- Split the package into one module per business step (e.g. fetch,
+  normalize, upload), not by technical layer.
+- Each module stays independent of its siblings — no importing between
+  them — and exposes a plain Python API plus its own CLI subcommand, so
+  it's runnable and testable in isolation.
+- Exactly one `pipeline` module is allowed to import the others; it
+  composes them into the end-to-end call and exposes any batch variant.
+- `cli.py` is the sole exception boundary and the package's entry
+  point: one `_cmd_<name>(args) -> int` per subcommand, dispatched via
+  `set_defaults(func=...)`, each catching its own module's exceptions
+  and printing `str(exc)` to stderr on failure.
 
 ## Environment & dependencies
 
@@ -36,6 +60,10 @@ R2 credentials/bucket are read from environment variables only —
 `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
 `R2_BUCKET` — never passed as flags or committed to the repo.
 
+Kaggle credentials, same rule: `KAGGLE_API_TOKEN` (or the legacy
+`KAGGLE_USERNAME`/`KAGGLE_KEY` pair) as environment variables only —
+never a flag, never a `~/.kaggle/*` credentials file.
+
 ## External services
 
 - **iTunes Search API** — uncredentialed, rate-limited (~20 req/min).
@@ -43,3 +71,7 @@ R2 credentials/bucket are read from environment variables only —
   (`SEARCH_INTERVAL`, `MAX_RETRIES`, `INITIAL_BACKOFF`).
 - **Cloudflare R2** — reached via its S3-compatible endpoint
   (`region_name="auto"`), configured in `src/cover_art/upload.py`.
+- **Kaggle** — accessed via `kagglehub`. Auth from `KAGGLE_API_TOKEN`
+  (current single-token scheme) or `KAGGLE_USERNAME`/`KAGGLE_KEY`
+  (legacy) env vars — never a flag, never a credentials file. Dataset
+  slug is `DATASET` in `src/rym_albums/download.py`.
