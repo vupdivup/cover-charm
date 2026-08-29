@@ -1,10 +1,12 @@
-# rym_albums
+# album_seed
 
-Download the RateYourMusic top-albums dataset from Kaggle, take the
-most-reviewed *N* albums, and export them in the shape
-`cover_art.pipeline.publish_covers` expects. Three independent modules
-(download, select, export), each with a CLI subcommand and a Python
-API, plus a fourth `top` (pipeline) module that chains all three.
+Download an album-ratings dataset from Kaggle, take the top *N* albums
+by popularity, and export them in the shape
+`cover_art.pipeline.publish_covers` expects. Source-agnostic — the
+dataset slug is a tunable, currently defaulting to AlbumOfTheYear's top
+5000 user-rated albums. Three independent modules (download, select,
+export), each with a CLI subcommand and a Python API, plus a fourth
+`top` (pipeline) module that chains all three.
 
 ## Install
 
@@ -25,38 +27,40 @@ single-token scheme), or `KAGGLE_USERNAME`/`KAGGLE_KEY` env vars
 **CLI:**
 
 ```
-rym-albums download
-rym-albums download --dataset tobennao/rym-top-5000 --force
+album-seed download
+album-seed download --dataset tabibyte/aoty-5000-highest-user-rated-albums --force
 ```
 
-Options: `--dataset` (Kaggle slug, default `tobennao/rym-top-5000`),
-`--force` (re-download even if cached).
+Options: `--dataset` (Kaggle slug, default
+`tabibyte/aoty-5000-highest-user-rated-albums`), `--csv-name` (pick a
+specific CSV when the dataset ships more than one; the default ships
+just the one), `--force` (re-download even if cached).
 
 **Python API:**
 
 ```python
-from rym_albums import dataset_csv, download_dataset, find_csv
+from album_seed import dataset_csv, download_dataset, find_csv
 
 path = dataset_csv()               # download (or reuse cache) + locate the CSV
 directory = download_dataset()     # just the cached dataset directory
 csv_path = find_csv(directory)     # locate the CSV within it
 ```
 
-Exports: `DATASET`, `DatasetError`, `download_dataset`, `find_csv`, `dataset_csv`.
+Exports: `DATASET`, `DEFAULT_CSV_NAME`, `DatasetError`, `download_dataset`, `find_csv`, `dataset_csv`.
 
 ## select
 
-Rank the dataset's rows by review count and keep the top *N*. Uses the
-stdlib `csv` module, not pandas -- the job is one sort and one slice
-over ~5,000 rows. Column headers vary across dataset revisions, so
-they're matched loosely by alias rather than hard-coded (see
-`resolve_column`); an unrecognized header raises `ColumnNotFound`
-naming what it did find.
+Rank the dataset's rows by popularity count (ratings or reviews,
+whichever the source exposes) and keep the top *N*. Uses the stdlib
+`csv` module, not pandas -- the job is one sort and one slice over
+~5,000 rows. Column headers vary across sources, so they're matched
+loosely by alias rather than hard-coded (see `resolve_column`); an
+unrecognized header raises `ColumnNotFound` naming what it did find.
 
 **CLI:**
 
 ```
-rym-albums select --input rym_top_5000.csv -n 100
+album-seed select --input aoty.csv -n 100
 ```
 
 Options: `--input` (required, path to the dataset CSV), `-n/--limit`
@@ -65,13 +69,13 @@ Options: `--input` (required, path to the dataset CSV), `-n/--limit`
 **Python API:**
 
 ```python
-from rym_albums import load_rows, top_by_reviews
+from album_seed import load_rows, top_by_count
 
-rows = load_rows("rym_top_5000.csv")
-top = top_by_reviews(rows, limit=100)
+rows = load_rows("aoty.csv")
+top = top_by_count(rows, limit=100)
 ```
 
-Exports: `ColumnNotFound`, `load_rows`, `resolve_column`, `top_by_reviews`.
+Exports: `ColumnNotFound`, `load_rows`, `resolve_column`, `top_by_count`.
 
 ## export
 
@@ -83,9 +87,9 @@ Map raw dataset rows to `cover_art`'s album shape: a list of
 **CLI:**
 
 ```
-rym-albums export --input rym_top_5000.csv -o albums.json
-echo '[{"Album": "OK Computer", "Artist Name": "Radiohead", "Release Date": "1997"}]' \
-  | rym-albums export --input -
+album-seed export --input aoty.csv -o albums.json
+echo '[{"title": "OK Computer", "artist": "Radiohead", "release_date": "1997"}]' \
+  | album-seed export --input -
 ```
 
 Options: `--input` (required, a dataset CSV path or `-` for a JSON row
@@ -94,9 +98,9 @@ array on stdin), `-o/--output` (default: stdout).
 **Python API:**
 
 ```python
-from rym_albums import to_albums, load_rows
+from album_seed import to_albums, load_rows
 
-rows = load_rows("rym_top_5000.csv")
+rows = load_rows("aoty.csv")
 albums = to_albums(rows)
 # [{"title": "OK Computer", "artist": "Radiohead", "year": 1997}, ...]
 ```
@@ -112,21 +116,21 @@ ranks it, and exports the top *N* albums, all in one call.
 **CLI:**
 
 ```
-rym-albums top -n 50
-rym-albums top -n 50 -o albums.json
-rym-albums top -n 50 --input rym_top_5000.csv   # reuse an already-downloaded CSV
+album-seed top -n 50
+album-seed top -n 50 -o albums.json
+album-seed top -n 50 --input aoty.csv   # reuse an already-downloaded CSV
 ```
 
 Options: `-n/--limit` (default 100), `--dataset` (default
-`tobennao/rym-top-5000`), `--input` (use this CSV instead of
-downloading), `--force` (re-download), `-o/--output` (default:
-stdout). Prints an album count to stderr and the JSON array to stdout
-(or the output path, if `-o` is given).
+`tabibyte/aoty-5000-highest-user-rated-albums`), `--csv-name`, `--input`
+(use this CSV instead of downloading), `--force` (re-download),
+`-o/--output` (default: stdout). Prints an album count to stderr and
+the JSON array to stdout (or the output path, if `-o` is given).
 
 **Python API:**
 
 ```python
-from rym_albums import top_albums
+from album_seed import top_albums
 
 albums = top_albums(limit=100)
 ```
@@ -140,7 +144,7 @@ Exports: `top_albums`.
 
 ```python
 from cover_art.pipeline import publish_covers
-from rym_albums import top_albums
+from album_seed import top_albums
 
 outcomes = publish_covers(top_albums(limit=50), prefix="covers/")
 for outcome in outcomes:

@@ -1,4 +1,4 @@
-"""Module 1: download the RateYourMusic top-albums dataset from Kaggle.
+"""Module 1: download an album-ratings dataset from Kaggle.
 
 ``kagglehub`` handles auth -- the ``KAGGLE_API_TOKEN`` env var (current
 single-token scheme) or the legacy ``KAGGLE_USERNAME``/``KAGGLE_KEY``
@@ -19,13 +19,11 @@ import kagglehub
 # Public tunables, like fetch.SEARCH_INTERVAL -- override by reassignment
 # or via the CLI's --dataset/--csv-name flags. Column names aren't
 # documented, so they're resolved at runtime; see select.py's
-# _COLUMN_ALIASES. The CSV filename can't be resolved that way, though
-# -- this dataset ships two CSVs (rym_clean1.csv, one row per line, and
-# rym_raw1.csv, whose release_date cells span multiple lines), so
-# DEFAULT_CSV_NAME picks the well-formed one instead of erroring on the
-# ambiguity every time.
-DATASET = "tobennao/rym-top-5000"
-DEFAULT_CSV_NAME = "rym_clean1.csv"
+# _COLUMN_ALIASES. The default dataset ships exactly one CSV, so there's
+# nothing to disambiguate; DEFAULT_CSV_NAME stays available for a
+# --dataset override that ships more than one (see find_csv).
+DATASET = "tabibyte/aoty-5000-highest-user-rated-albums"
+DEFAULT_CSV_NAME = None
 
 
 class DatasetError(Exception):

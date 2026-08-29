@@ -16,7 +16,7 @@ dependencies = [
 
 [project.scripts]
 cover-art = "cover_art.cli:main"
-rym-albums = "rym_albums.cli:main"
+album-seed = "album_seed.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.11.19,<0.12.0"]
@@ -25,4 +25,4 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 # uv_build's src layout only ships one top-level module by default;
 # this repo hosts two independent packages side by side under src/.
-module-name = ["cover_art", "rym_albums"]
+module-name = ["cover_art", "album_seed"]

@@ -1,4 +1,4 @@
-"""Command-line interface for rym_albums: download, select, export, top subcommands."""
+"""Command-line interface for album_seed: download, select, export, top subcommands."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 from .download import DATASET, DEFAULT_CSV_NAME, DatasetError, dataset_csv
 from .export import to_albums, to_json, write_json
 from .pipeline import top_albums
-from .select import ColumnNotFound, load_rows, top_by_reviews
+from .select import ColumnNotFound, load_rows, top_by_count
 
 
 def _cmd_download(args: argparse.Namespace) -> int:
@@ -26,7 +26,7 @@ def _cmd_download(args: argparse.Namespace) -> int:
 def _cmd_select(args: argparse.Namespace) -> int:
     try:
         rows = load_rows(args.input)
-        top = top_by_reviews(rows, args.limit)
+        top = top_by_count(rows, args.limit)
     except ColumnNotFound as exc:
         print(str(exc), file=sys.stderr)
         return 1
@@ -85,7 +85,7 @@ def _cmd_top(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="rym-albums", description="Download the RYM top-albums dataset and export the most-reviewed albums."
+        prog="album-seed", description="Download an album-ratings dataset and export the top-rated albums."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -97,7 +97,7 @@ def build_parser() -> argparse.ArgumentParser:
     download_p.add_argument("--force", action="store_true", help="re-download even if a cached copy exists")
     download_p.set_defaults(func=_cmd_download)
 
-    select_p = sub.add_parser("select", help="rank dataset rows by review count and take the top N")
+    select_p = sub.add_parser("select", help="rank dataset rows by popularity count and take the top N")
     select_p.add_argument("--input", required=True, help="path to the dataset CSV")
     select_p.add_argument("-n", "--limit", type=int, default=100, help="number of rows to keep (default: 100)")
     select_p.add_argument("-o", "--output", default=None, help="write JSON to this file instead of stdout")

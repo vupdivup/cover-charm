@@ -33,9 +33,9 @@ class AlbumRecord:
 
 
 def _parse_year(value: str | None) -> int | None:
-    # RYM release-date cells come through as e.g. "17 August 1959" or a
-    # bare "1959" -- pull the first 4-digit run rather than parsing a
-    # full date format. None (rather than 0) so publish_covers treats a
+    # Release-date cells vary by source, e.g. "March 15, 2015" or a bare
+    # "1959" -- pull the first 4-digit run rather than parsing a full
+    # date format. None (rather than 0) so publish_covers treats a
     # missing year as "don't filter" instead of a real mismatch.
     if not value:
         return None

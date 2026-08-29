@@ -1,10 +1,10 @@
-"""rym_albums: download the RateYourMusic top-albums Kaggle dataset and
-export the most-reviewed albums in cover_art's input shape."""
+"""album_seed: download an album-ratings Kaggle dataset and export the
+top albums by popularity in cover_art's input shape."""
 
 from .download import DATASET, DEFAULT_CSV_NAME, DatasetError, dataset_csv, download_dataset, find_csv
 from .export import AlbumRecord, to_albums, to_json, write_json
 from .pipeline import top_albums
-from .select import ColumnNotFound, load_rows, resolve_column, top_by_reviews
+from .select import ColumnNotFound, load_rows, resolve_column, top_by_count
 
 __all__ = [
     "DATASET",
@@ -16,7 +16,7 @@ __all__ = [
     "ColumnNotFound",
     "load_rows",
     "resolve_column",
-    "top_by_reviews",
+    "top_by_count",
     "AlbumRecord",
     "to_albums",
     "to_json",

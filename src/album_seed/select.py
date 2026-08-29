@@ -1,4 +1,4 @@
-"""Module 2: read the dataset CSV and rank albums by review count.
+"""Module 2: read the dataset CSV and rank albums by a popularity count.
 
 Uses the stdlib ``csv`` module rather than pandas -- the job is one
 sort and one slice over ~5,000 rows, and pandas would be the heaviest
@@ -8,16 +8,23 @@ dependency in the whole repo for that.
 from __future__ import annotations
 
 import csv
+import re
 from collections.abc import Sequence
 from pathlib import Path
 
-# Kaggle RYM datasets vary in exact header spelling across uploads/revisions;
-# match loosely instead of hard-coding one column name per kind.
+# Kaggle album datasets vary in exact header spelling across sources and
+# revisions; match loosely instead of hard-coding one column name per
+# kind. "count" covers both rating-count and review-count datasets --
+# whichever popularity metric a given source exposes.
 _COLUMN_ALIASES = {
-    "reviews": ("number of reviews", "reviews", "review_count", "num_reviews"),
-    "title": ("album", "album name", "title", "release name"),
-    "artist": ("artist name", "artist", "artists"),
-    "year": ("release date", "year", "release_date", "released"),
+    "count": (
+        "rating_count", "rating count", "ratings", "number of ratings", "num_ratings",
+        "review_count", "review count", "reviews", "number of reviews", "num_reviews",
+        "votes",
+    ),
+    "title": ("title", "album", "album name", "release name"),
+    "artist": ("artist", "artist name", "artists"),
+    "year": ("release_date", "release date", "year", "released"),
 }
 
 
@@ -49,27 +56,38 @@ def resolve_column(fieldnames: Sequence[str], kind: str) -> str:
     raise ColumnNotFound(f"no column for {kind!r} among headers: {list(fieldnames)}")
 
 
-def _to_int(value: str) -> int | None:
-    """Parse a review-count cell, or None if it isn't a number.
+_COUNT_RE = re.compile(r"[\d,]+")
 
-    Rows with an unparseable count are dropped rather than treated as
-    zero -- a zero would silently sort to the bottom, but wouldn't be a
-    real ranking, and could still pad out the tail of a small top-N.
+
+def _to_int(value: str) -> int | None:
+    """Parse a popularity-count cell, or None if it isn't a number.
+
+    Cells aren't always a bare number -- e.g. AOTY's rating_count reads
+    "28,594 ratings" -- so pull the leading digit run rather than
+    parsing the whole cell. Rows with no parseable count are dropped
+    rather than treated as zero -- a zero would silently sort to the
+    bottom, but wouldn't be a real ranking, and could still pad out the
+    tail of a small top-N.
     """
+    if not value:
+        return None
+    match = _COUNT_RE.search(value)
+    if not match:
+        return None
     try:
-        return int(value.replace(",", "").strip())
-    except (AttributeError, ValueError):
+        return int(match.group().replace(",", ""))
+    except ValueError:
         return None
 
 
-def top_by_reviews(
+def top_by_count(
     rows: list[dict[str, str]], limit: int = 100, *, column: str | None = None
 ) -> list[dict[str, str]]:
-    """Return the ``limit`` rows with the highest review count, descending."""
+    """Return the ``limit`` rows with the highest popularity count, descending."""
     if not rows:
         return []
 
-    column = column or resolve_column(rows[0].keys(), "reviews")
+    column = column or resolve_column(rows[0].keys(), "count")
 
     counted = [(row, _to_int(row.get(column, ""))) for row in rows]
     counted = [(row, count) for row, count in counted if count is not None]

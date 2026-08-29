@@ -9,11 +9,12 @@ square, and uploads it to Cloudflare R2. `fetch`, `normalize`, and
 `upload` are independent modules; `pipeline` composes them; `cli` is
 the entry point. See `src/cover_art/README.md` for full usage.
 
-`rym_albums` downloads the RateYourMusic top-albums Kaggle dataset and
-exports the most-reviewed albums in the shape `cover_art` expects.
-`download`, `select`, and `export` are independent modules; `pipeline`
-composes them; `cli` is the entry point. See `src/rym_albums/README.md`
-for full usage.
+`album_seed` downloads a Kaggle album-ratings dataset and exports the
+top albums by popularity in the shape `cover_art` expects — source-
+agnostic; the dataset slug is a tunable, currently defaulting to
+AlbumOfTheYear's top-5000. `download`, `select`, and `export` are
+independent modules; `pipeline` composes them; `cli` is the entry
+point. See `src/album_seed/README.md` for full usage.
 
 ## Architecture
 
@@ -74,4 +75,4 @@ never a flag, never a `~/.kaggle/*` credentials file.
 - **Kaggle** — accessed via `kagglehub`. Auth from `KAGGLE_API_TOKEN`
   (current single-token scheme) or `KAGGLE_USERNAME`/`KAGGLE_KEY`
   (legacy) env vars — never a flag, never a credentials file. Dataset
-  slug is `DATASET` in `src/rym_albums/download.py`.
+  slug is `DATASET` in `src/album_seed/download.py`.

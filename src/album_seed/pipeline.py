@@ -11,7 +11,7 @@ from pathlib import Path
 
 from .download import DATASET, DEFAULT_CSV_NAME, dataset_csv
 from .export import to_albums
-from .select import load_rows, top_by_reviews
+from .select import load_rows, top_by_count
 
 
 def top_albums(
@@ -22,7 +22,7 @@ def top_albums(
     path: str | Path | None = None,
     force: bool = False,
 ) -> list[dict]:
-    """Download the RYM dataset, take the top ``limit`` albums by review count.
+    """Download the album dataset, take the top ``limit`` albums by popularity count.
 
     ``path``, when given, skips the download and reads that CSV
     instead -- lets an already-downloaded dataset be used offline.
@@ -31,5 +31,5 @@ def top_albums(
     """
     csv_path = Path(path) if path is not None else dataset_csv(dataset, force=force, name=csv_name)
     rows = load_rows(csv_path)
-    top = top_by_reviews(rows, limit)
+    top = top_by_count(rows, limit)
     return to_albums(top)
