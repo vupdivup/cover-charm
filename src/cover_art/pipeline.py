@@ -5,20 +5,19 @@ fetch, normalize, and upload stay independent of each other. Everything
 here happens in memory: album art in, normalized bytes to R2, nothing
 touches disk unless ``save`` is given.
 
-``publish_covers`` runs the same pipeline over many albums, throttled
-to stay under the iTunes Search API's rate limit and resilient to a
-single album failing.
+``publish_covers`` runs the same pipeline over many albums and is
+resilient to a single album failing. Throttling and retry against the
+iTunes Search API's rate limit are handled inside ``fetch.py`` for
+every caller, not just batches -- see ``fetch.SEARCH_INTERVAL`` and
+friends.
 """
 
 from __future__ import annotations
 
 import dataclasses
-import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-
-import httpx
 
 from ._util import slugify
 from .fetch import Album, CoverArtNotFound, artwork_url, download_url, find_album
@@ -26,14 +25,6 @@ from .normalize import normalize_image
 from .upload import R2Config, R2ConfigError, upload_bytes
 
 _EXTENSIONS = {"JPEG": "jpg"}
-
-# The iTunes Search API allows roughly 20 requests/minute per IP,
-# uncredentialed, and answers 403 (sometimes 429) past that. Each album
-# in a batch costs exactly one search request (fetch.find_album), so
-# spacing whole publish_cover calls by this interval is equivalent to
-# spacing the search requests themselves.
-DEFAULT_SEARCH_INTERVAL = 3.0
-_RATE_LIMITED_STATUSES = (403, 429)
 
 
 @dataclass(frozen=True)
@@ -136,30 +127,6 @@ def _normalize_item(item) -> tuple[str, str | None, int | None]:
     raise ValueError(f"unrecognized batch item: {item!r}")
 
 
-class _Throttle:
-    """Enforces a minimum gap between successive wait() calls."""
-
-    def __init__(self, interval: float) -> None:
-        self._interval = interval
-        self._last: float | None = None
-
-    def wait(self) -> None:
-        now = time.monotonic()
-        if self._last is not None:
-            remaining = self._interval - (now - self._last)
-            if remaining > 0:
-                time.sleep(remaining)
-                now = time.monotonic()
-        self._last = now
-
-
-def _is_rate_limited(exc: Exception) -> bool:
-    return (
-        isinstance(exc, httpx.HTTPStatusError)
-        and exc.response.status_code in _RATE_LIMITED_STATUSES
-    )
-
-
 def publish_covers(
     items: Iterable[str | Sequence | Mapping],
     *,
@@ -170,18 +137,15 @@ def publish_covers(
     country: str = "US",
     config: R2Config | None = None,
     bucket: str | None = None,
-    search_interval: float = DEFAULT_SEARCH_INTERVAL,
-    max_retries: int = 5,
-    initial_backoff: float = 5.0,
     on_result: Callable[[PublishOutcome], None] | None = None,
 ) -> list[PublishOutcome]:
     """Run publish_cover over many albums.
 
-    Throttled to ``search_interval`` seconds between albums to stay
-    under the iTunes Search API's rate limit, and retries a rate-limited
-    album (HTTP 403/429) with exponential backoff up to ``max_retries``
-    times before giving up on it. One album failing doesn't stop the
-    rest -- its failure is recorded in that album's PublishOutcome.
+    One album failing doesn't stop the rest -- its failure is recorded
+    in that album's PublishOutcome. iTunes throttling and 403/429 retry
+    happen automatically inside publish_cover -> fetch.search_albums for
+    every album, same as any other caller; see fetch.SEARCH_INTERVAL and
+    friends to tune it.
 
     R2 config/credentials are resolved once up front (same rules as
     publish_cover's ``config``/``bucket``), so a bad config fails
@@ -201,40 +165,31 @@ def publish_covers(
     if bucket:
         config = dataclasses.replace(config, bucket=bucket)
 
-    throttle = _Throttle(search_interval)
     outcomes: list[PublishOutcome] = []
 
     for item in items:
         title, artist, year = _normalize_item(item)
 
-        attempt = 0
-        while True:
-            throttle.wait()
-            try:
-                result = publish_cover(
-                    title,
-                    artist,
-                    year,
-                    size=size,
-                    mode=mode,
-                    fmt=fmt,
-                    prefix=prefix,
-                    country=country,
-                    config=config,
-                )
-                outcome = PublishOutcome(title=title, artist=artist, year=year, result=result)
-            except R2ConfigError:
-                raise
-            except Exception as exc:
-                if _is_rate_limited(exc) and attempt < max_retries:
-                    time.sleep(initial_backoff * (2**attempt))
-                    attempt += 1
-                    continue
-                outcome = PublishOutcome(title=title, artist=artist, year=year, error=exc)
+        try:
+            result = publish_cover(
+                title,
+                artist,
+                year,
+                size=size,
+                mode=mode,
+                fmt=fmt,
+                prefix=prefix,
+                country=country,
+                config=config,
+            )
+            outcome = PublishOutcome(title=title, artist=artist, year=year, result=result)
+        except R2ConfigError:
+            raise
+        except Exception as exc:
+            outcome = PublishOutcome(title=title, artist=artist, year=year, error=exc)
 
-            outcomes.append(outcome)
-            if on_result is not None:
-                on_result(outcome)
-            break
+        outcomes.append(outcome)
+        if on_result is not None:
+            on_result(outcome)
 
     return outcomes

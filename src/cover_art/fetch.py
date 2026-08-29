@@ -10,13 +10,28 @@ extra request needed.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 
 import httpx
 
+from ._util import Throttle
+
 _SEARCH_URL = "https://itunes.apple.com/search"
 _USER_AGENT = "cover-art/0.1.0"
 _ARTWORK_TOKEN = "100x100bb"
+
+# The iTunes Search API allows roughly 20 requests/minute per IP,
+# uncredentialed, and answers 403 (sometimes 429) past that. Read at
+# call time (not cached), so reassigning these takes effect immediately.
+SEARCH_INTERVAL = 3.0
+MAX_RETRIES = 5
+INITIAL_BACKOFF = 5.0
+_RATE_LIMITED_STATUSES = (403, 429)
+
+# Shared across every search_albums call, including single-shot ones --
+# the first call never sleeps, so interactive use is unaffected.
+_search_throttle = Throttle(lambda: SEARCH_INTERVAL)
 
 
 class CoverArtNotFound(Exception):
@@ -58,6 +73,28 @@ def _to_album(result: dict) -> Album | None:
     )
 
 
+def _is_rate_limited(exc: Exception) -> bool:
+    return (
+        isinstance(exc, httpx.HTTPStatusError)
+        and exc.response.status_code in _RATE_LIMITED_STATUSES
+    )
+
+
+def _get_with_retry(client: httpx.Client, url: str, **kwargs) -> httpx.Response:
+    """GET with raise_for_status(), retrying a 403/429 with exponential backoff."""
+    attempt = 0
+    while True:
+        try:
+            response = client.get(url, **kwargs)
+            response.raise_for_status()
+            return response
+        except httpx.HTTPStatusError as exc:
+            if not _is_rate_limited(exc) or attempt >= MAX_RETRIES:
+                raise
+            time.sleep(INITIAL_BACKOFF * (2**attempt))
+            attempt += 1
+
+
 def search_albums(
     title: str,
     artist: str | None = None,
@@ -81,9 +118,9 @@ def search_albums(
         "country": country,
     }
     headers = {"User-Agent": _USER_AGENT}
+    _search_throttle.wait()
     with httpx.Client(headers=headers, timeout=10.0) as client:
-        response = client.get(_SEARCH_URL, params=params)
-        response.raise_for_status()
+        response = _get_with_retry(client, _SEARCH_URL, params=params)
         # iTunes replies with content-type text/javascript; parse the
         # body directly rather than relying on httpx's content-type check.
         data = response.json()
@@ -121,11 +158,15 @@ def artwork_url(album: Album, *, size: int = 600) -> str:
 
 
 def download_url(url: str) -> bytes:
-    """GET raw bytes from an artwork URL."""
+    """GET raw bytes from an artwork URL.
+
+    Retries a 403/429 like search_albums does, though the artwork CDN
+    isn't meaningfully rate-limited in practice. Not throttled -- the
+    throttle exists solely to pace Search API calls.
+    """
     headers = {"User-Agent": _USER_AGENT}
     with httpx.Client(headers=headers, timeout=10.0) as client:
-        response = client.get(url)
-        response.raise_for_status()
+        response = _get_with_retry(client, url)
         return response.content
 
 

@@ -171,3 +171,42 @@ print(result.key, result.album)
 ```
 
 Exports: `publish_cover`, `PublishResult`, `default_key`.
+
+**Batch:**
+
+`publish_covers` runs the pipeline over many albums, and keeps going
+when one album fails rather than aborting the batch: each album gets
+its own `PublishOutcome` with `.ok`, `.result`, and `.error`.
+
+Throttling and retry against the iTunes Search API's rate limit
+(~20 requests/minute uncredentialed) live in `fetch.py`, not here, and
+apply to *every* caller — a single `fetch`/`publish` included, not just
+batches. Tune them via `cover_art.fetch.SEARCH_INTERVAL` (default 3.0s,
+one search per album), `MAX_RETRIES` (default 5), and `INITIAL_BACKOFF`
+(default 5.0s, doubled per retry) if you hit 403/429 anyway.
+
+Python-only for now, and not part of the top-level `cover_art` package
+API — import it from the `pipeline` submodule directly:
+
+```python
+from cover_art.pipeline import publish_covers
+
+albums = [
+    "Kind of Blue",                          # title only
+    ("Abbey Road", "The Beatles"),           # title, artist
+    ("Thriller", "Michael Jackson", 1982),   # title, artist, year
+    {"title": "OK Computer", "artist": "Radiohead"},
+]
+
+outcomes = publish_covers(albums, prefix="covers/")
+for outcome in outcomes:
+    if outcome.ok:
+        print(outcome.title, "->", outcome.result.key)
+    else:
+        print(outcome.title, "failed:", outcome.error)
+```
+
+R2 config is resolved once up front (same `config=`/`bucket=` as
+`publish_cover`), so a credentials problem fails immediately instead of
+after downloading everything. `save` isn't a batch parameter — a batch
+writes to R2, and one local path can't serve many albums.
