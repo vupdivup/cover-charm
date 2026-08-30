@@ -12,15 +12,15 @@ from .fetch import CoverArtNotFound, download_cover, find_cover_url
 
 def _cmd_fetch(args: argparse.Namespace) -> int:
     if args.url_only:
-        url = find_cover_url(args.title, args.artist, args.year, size=args.size, country=args.country)
+        url = find_cover_url(args.title, args.artist, size=args.size, country=args.country)
         if url is None:
-            print(f"no album found for title={args.title!r} artist={args.artist!r} year={args.year!r}", file=sys.stderr)
+            print(f"no album found for title={args.title!r} artist={args.artist!r}", file=sys.stderr)
             return 1
         print(url)
         return 0
 
     try:
-        data = download_cover(args.title, args.artist, args.year, size=args.size, country=args.country)
+        data = download_cover(args.title, args.artist, size=args.size, country=args.country)
     except CoverArtNotFound as exc:
         print(str(exc), file=sys.stderr)
         return 1
@@ -40,7 +40,6 @@ def build_parser() -> argparse.ArgumentParser:
     fetch_p = sub.add_parser("fetch", help="find and download an album's cover art via iTunes Search")
     fetch_p.add_argument("title", help="album title")
     fetch_p.add_argument("--artist", default=None, help="artist name, narrows the match")
-    fetch_p.add_argument("--year", type=int, default=None, help="release year, narrows the match")
     fetch_p.add_argument("--size", type=int, default=600, help="artwork size in pixels (default: 600)")
     fetch_p.add_argument("--country", default="US", help="iTunes storefront country code (default: US)")
     fetch_p.add_argument("-o", "--output", default=None, help="output file path (default: <slugified title>.jpg)")

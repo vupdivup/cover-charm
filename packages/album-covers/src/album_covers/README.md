@@ -1,6 +1,6 @@
 # album-covers
 
-Fetch album cover art by title (plus optional artist and year), via
+Fetch album cover art by title (plus optional artist), via
 the [iTunes Search
 API](https://performance-partners.apple.com/search-api). Free, no API
 key, no signup. iTunes returns artwork URLs that embed the resolution
@@ -33,21 +33,29 @@ pip install /path/to/album-covers
 **CLI:**
 
 ```
-album-covers fetch "Kind of Blue" --artist "Miles Davis" --year 1959 -o cover.jpg
+album-covers fetch "Kind of Blue" --artist "Miles Davis" -o cover.jpg
 album-covers fetch "Kind of Blue" --artist "Miles Davis" --url-only
 ```
 
-Options: `--artist`, `--year` (both narrow the match), `--size`
-(artwork pixel size, default 600), `--country` (iTunes storefront,
-default `US`), `-o/--output` (default: slugified title + `.jpg`),
-`--url-only` (print the resolved artwork URL instead of downloading).
+Options: `--artist` (narrows the match), `--size` (artwork pixel size,
+default 600), `--country` (iTunes storefront, default `US`),
+`-o/--output` (default: slugified title + `.jpg`), `--url-only` (print
+the resolved artwork URL instead of downloading).
+
+Matches are scored client-side by fuzzy title/artist similarity (there's
+no server-side relevance parameter for either); anything under
+`MATCH_THRESHOLD` (default 0.75, in `fetch.py`) is rejected as not the
+requested album rather than returned as a wrong guess. If a real match
+gets rejected, lower the threshold. Release year is not used for
+matching -- iTunes' release date reflects the storefront edition
+(remaster, reissue, region), not necessarily the original release.
 
 **Python API:**
 
 ```python
 from album_covers import download_cover, search_albums, find_cover_url
 
-data = download_cover("Kind of Blue", artist="Miles Davis", year=1959)
+data = download_cover("Kind of Blue", artist="Miles Davis")
 
 # or inspect matches / get just the URL before downloading
 albums = search_albums("Kind of Blue", artist="Miles Davis")

@@ -62,7 +62,8 @@ never a flag, never a `~/.kaggle/*` credentials file.
 - **iTunes Search API** — uncredentialed, rate-limited (~20 req/min).
   Throttle/retry knobs live in
   `packages/album-covers/src/album_covers/fetch.py`
-  (`SEARCH_INTERVAL`, `MAX_RETRIES`, `INITIAL_BACKOFF`).
+  (`SEARCH_INTERVAL`, `MAX_RETRIES`, `INITIAL_BACKOFF`). Fuzzy-match
+  threshold for accepting a result is `MATCH_THRESHOLD` in same file.
 - **Kaggle** — accessed via `kagglehub`. Auth from `KAGGLE_API_TOKEN`
   (current single-token scheme) or `KAGGLE_USERNAME`/`KAGGLE_KEY`
   (legacy) env vars — never a flag, never a credentials file. Dataset

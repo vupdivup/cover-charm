@@ -10,7 +10,10 @@ extra request needed.
 
 from __future__ import annotations
 
+import difflib
+import re
 import time
+import unicodedata
 from dataclasses import dataclass
 
 import httpx
@@ -28,6 +31,20 @@ SEARCH_INTERVAL = 3.0
 MAX_RETRIES = 5
 INITIAL_BACKOFF = 5.0
 _RATE_LIMITED_STATUSES = (403, 429)
+
+# Minimum blended title/artist similarity for a result to count as the
+# requested album. iTunes always answers with *something*, so without a
+# floor a typo'd or absent album silently yields the wrong cover.
+MATCH_THRESHOLD = 0.75
+
+# Edition noise iTunes appends to titles that the query never includes
+# (e.g. "OK Computer (Deluxe Edition)"), stripped before comparing.
+_EDITION_SUFFIX_RE = re.compile(
+    r"[\(\[][^\)\]]*[\)\]]|\b(deluxe|remaster(?:ed)?|expanded|anniversary|edition|version)\b",
+    re.IGNORECASE,
+)
+_PUNCT_RE = re.compile(r"[^\w\s]")
+_WHITESPACE_RE = re.compile(r"\s+")
 
 # Shared across every search_albums call, including single-shot ones --
 # the first call never sleeps, so interactive use is unaffected.
@@ -73,6 +90,35 @@ def _to_album(result: dict) -> Album | None:
     )
 
 
+def _normalize(s: str) -> str:
+    """Casefold and strip accents, edition noise, and punctuation for comparison."""
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    s = _EDITION_SUFFIX_RE.sub(" ", s.casefold())
+    s = _PUNCT_RE.sub(" ", s)
+    return _WHITESPACE_RE.sub(" ", s).strip()
+
+
+def _similarity(a: str, b: str) -> float:
+    na, nb = _normalize(a), _normalize(b)
+    if not na or not nb:
+        return 0.0
+    # A whole-word prefix match (e.g. "blonde" vs. "blonde deluxe" once
+    # edition noise is stripped) is as good as identical.
+    shorter, longer = sorted((na, nb), key=len)
+    if longer.startswith(shorter):
+        return 1.0
+    return difflib.SequenceMatcher(None, na, nb).ratio()
+
+
+def _match_score(album: Album, title: str, artist: str | None) -> float:
+    title_score = _similarity(album.title, title)
+    if artist is None:
+        return title_score
+    artist_score = _similarity(album.artist, artist)
+    return 0.6 * title_score + 0.4 * artist_score
+
+
 def _is_rate_limited(exc: Exception) -> bool:
     return (
         isinstance(exc, httpx.HTTPStatusError)
@@ -98,16 +144,21 @@ def _get_with_retry(client: httpx.Client, url: str, **kwargs) -> httpx.Response:
 def search_albums(
     title: str,
     artist: str | None = None,
-    year: int | None = None,
     *,
     limit: int = 25,
     country: str = "US",
 ) -> list[Album]:
     """Search iTunes for albums, ranked best match first.
 
-    ``artist`` and ``year``, when given, are used to filter and rank
-    results client-side -- the iTunes Search API has no server-side
-    parameter for either.
+    Results are scored client-side by fuzzy title/artist similarity --
+    the Search API has no server-side relevance parameter for either --
+    and anything under MATCH_THRESHOLD is dropped, since iTunes always
+    returns *something* for a query even when nothing actually matches.
+
+    Release year is deliberately not used as a matching signal: iTunes'
+    releaseDate reflects the storefront's edition (remaster, reissue,
+    regional release), not necessarily the original release, so filtering
+    on it discards correct matches more often than it rejects wrong ones.
     """
     term = title if not artist else f"{title} {artist}"
     params = {
@@ -127,28 +178,21 @@ def search_albums(
 
     albums = [a for a in (_to_album(r) for r in data.get("results", [])) if a is not None]
 
-    if year is not None:
-        albums = [a for a in albums if a.year is None or a.year == year]
+    scored = [(a, _match_score(a, title, artist)) for a in albums]
+    scored = [(a, s) for a, s in scored if s >= MATCH_THRESHOLD]
+    scored.sort(key=lambda pair: pair[1], reverse=True)
 
-    if artist is not None:
-        artist_lower = artist.lower()
-        exact = [a for a in albums if a.artist.lower() == artist_lower]
-        contains = [a for a in albums if artist_lower in a.artist.lower()]
-        others = [a for a in albums if a not in exact and a not in contains]
-        albums = exact + [a for a in contains if a not in exact] + others
-
-    return albums
+    return [a for a, _ in scored]
 
 
 def find_album(
     title: str,
     artist: str | None = None,
-    year: int | None = None,
     *,
     country: str = "US",
 ) -> Album | None:
     """Return the best-match Album for the query, or None."""
-    albums = search_albums(title, artist, year, country=country)
+    albums = search_albums(title, artist, country=country)
     return albums[0] if albums else None
 
 
@@ -173,13 +217,12 @@ def download_url(url: str) -> bytes:
 def find_cover_url(
     title: str,
     artist: str | None = None,
-    year: int | None = None,
     *,
     size: int = 600,
     country: str = "US",
 ) -> str | None:
     """Return the best-match album's artwork URL at ``size``x``size``, or None."""
-    album = find_album(title, artist, year, country=country)
+    album = find_album(title, artist, country=country)
     if album is None:
         return None
     return artwork_url(album, size=size)
@@ -188,15 +231,12 @@ def find_cover_url(
 def download_cover(
     title: str,
     artist: str | None = None,
-    year: int | None = None,
     *,
     size: int = 600,
     country: str = "US",
 ) -> bytes:
     """Find and download an album's cover art, raising CoverArtNotFound on no match."""
-    url = find_cover_url(title, artist, year, size=size, country=country)
+    url = find_cover_url(title, artist, size=size, country=country)
     if url is None:
-        raise CoverArtNotFound(
-            f"no album found for title={title!r} artist={artist!r} year={year!r}"
-        )
+        raise CoverArtNotFound(f"no album found for title={title!r} artist={artist!r}")
     return download_url(url)
