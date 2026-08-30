@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+## Assistant behavior
+
+Always use the `caveman` skill (ultra-compressed communication mode)
+for all responses in this repo.
+
 ## Overview
 
 This repo hosts two packages under `src/`, sharing one `pyproject.toml`.
