@@ -34,13 +34,13 @@ def render_gif(
     blend: str | Path,
     image: str | Path,
     *,
-    texture: str,
+    material: str,
     output: str | Path | None = None,
     fps: float = 24.0,
     keep_frames: bool = False,
     blender: str | Path | None = None,
 ) -> RenderResult:
-    """Render ``blend``'s animation with ``image`` swapped into the ``texture`` image datablock, and assemble the frames into a GIF at ``fps``.
+    """Render ``blend``'s animation with ``image`` swapped into ``material``'s image texture node, and assemble the frames into a GIF at ``fps``.
 
     ``blend`` is copied into a scratch directory before rendering.
     Background Blender doesn't write back to the file it opens, so this
@@ -61,7 +61,7 @@ def render_gif(
 
         frame_dir = scratch / "frames"
         frames = render_frames(
-            scratch_blend, image, texture=texture, out_dir=frame_dir, blender=blender
+            scratch_blend, image, material=material, out_dir=frame_dir, blender=blender
         )
         write_gif(frames, output, fps=fps)
 

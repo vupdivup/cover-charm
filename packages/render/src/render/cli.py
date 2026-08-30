@@ -13,7 +13,7 @@ def _cmd_render(args: argparse.Namespace) -> int:
         result = render_gif(
             args.blend,
             args.image,
-            texture=args.texture,
+            material=args.material,
             output=args.output,
             fps=args.fps,
             keep_frames=args.keep_frames,
@@ -34,7 +34,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("blend", help="path to the .blend file")
     parser.add_argument("--image", required=True, help="image to swap into the texture")
-    parser.add_argument("--texture", required=True, help="name of the image datablock to replace")
+    parser.add_argument("--material", required=True, help="name of the material whose image texture to replace")
     parser.add_argument("-o", "--output", default=None, help="output GIF path (default: <blend stem>.gif)")
     parser.add_argument("--fps", type=float, default=24.0, help="GIF frame rate (default: 24)")
     parser.add_argument("--keep-frames", action="store_true", help="keep the rendered PNG frames next to the GIF")

@@ -40,15 +40,18 @@ via `wslpath` automatically when needed — nothing to configure).
 ## CLI
 
 ```
-render scene.blend --image cover.jpg --texture "Cover Texture" -o out.gif --fps 12
+render scene.blend --image cover.jpg --material CoverMaterial -o out.gif --fps 12
 ```
 
-Options: `--image` (required), `--texture` (required — the name of the
-image datablock to replace; on a mismatch the error lists every image
-name the `.blend` actually has), `-o/--output` (default: `<blend
-stem>.gif`), `--fps` (default 24), `--keep-frames` (keep the rendered
-PNGs in `<output stem>_frames/` instead of discarding them),
-`--blender` (path to the executable, overriding auto-detection).
+Options: `--image` (required), `--material` (required — the name of the
+material whose image texture node gets the new image; visible at the
+top of the Properties > Material tab and in the Outliner, unlike an
+image datablock's name, which is buried in the Shader Editor. On a
+mismatch, the error lists every node-enabled material name the
+`.blend` actually has), `-o/--output` (default: `<blend stem>.gif`),
+`--fps` (default 24), `--keep-frames` (keep the rendered PNGs in
+`<output stem>_frames/` instead of discarding them), `--blender` (path
+to the executable, overriding auto-detection).
 
 Prints the frame count to stderr and the GIF path alone to stdout.
 
@@ -57,7 +60,7 @@ Prints the frame count to stderr and the GIF path alone to stdout.
 ```python
 from render import render_gif
 
-result = render_gif("scene.blend", "cover.jpg", texture="Cover Texture", fps=12)
+result = render_gif("scene.blend", "cover.jpg", material="CoverMaterial", fps=12)
 print(result.gif, len(result.frames), result.fps)
 ```
 
@@ -68,6 +71,9 @@ Exports: `render_gif`, `RenderResult`, `BlenderError`, `find_blender`,
 
 - The `.blend`'s own frame range, resolution, engine, and sample count
   are used as authored — none of that is overridable from this tool.
+- The named material must have exactly one image texture node. Zero
+  is an error naming the material; more than one is also an error,
+  listing the node names, rather than guessing which one you meant.
 - If the target image is packed into the `.blend`, it's unpacked
   before the swap (a packed image otherwise ignores a new file path).
 - GIF is a 256-colour paletted format: frames are quantized with

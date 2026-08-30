@@ -105,11 +105,11 @@ def render_frames(
     blend: str | Path,
     image: str | Path,
     *,
-    texture: str,
+    material: str,
     out_dir: str | Path,
     blender: str | Path | None = None,
 ) -> list[Path]:
-    """Open ``blend`` in Blender, swap in ``image`` for the ``texture`` image datablock, and render every frame as a PNG into ``out_dir``.
+    """Open ``blend`` in Blender, swap in ``image`` for ``material``'s image texture node, and render every frame as a PNG into ``out_dir``.
 
     Runs Blender with ``--background``, so nothing is displayed and the
     ``.blend`` on disk is never written back to.
@@ -133,8 +133,8 @@ def render_frames(
         "--",
         "--image",
         to_blender_path(image, translate=translate),
-        "--texture",
-        texture,
+        "--material",
+        material,
         "--out",
         to_blender_path(out_dir, translate=translate),
     ]
