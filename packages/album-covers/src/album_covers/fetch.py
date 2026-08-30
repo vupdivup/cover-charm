@@ -18,7 +18,7 @@ import httpx
 from ._util import Throttle
 
 _SEARCH_URL = "https://itunes.apple.com/search"
-_USER_AGENT = "cover-art/0.1.0"
+_USER_AGENT = "album-covers/0.1.0"
 _ARTWORK_TOKEN = "100x100bb"
 
 # The iTunes Search API allows roughly 20 requests/minute per IP,

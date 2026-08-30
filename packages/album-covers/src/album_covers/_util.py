@@ -1,4 +1,4 @@
-"""Small internal helpers shared across cover_art modules."""
+"""Small internal helpers shared across album_covers modules."""
 
 from __future__ import annotations
 
