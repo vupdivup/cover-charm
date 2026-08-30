@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 
@@ -31,10 +32,27 @@ def _cmd_fetch(args: argparse.Namespace) -> int:
     return 0
 
 
+def _configure_logging(args: argparse.Namespace) -> None:
+    """Set up the root handler once, level driven by -v/-q. Library code never does this itself."""
+    if args.quiet:
+        level = logging.ERROR
+    elif args.verbose >= 2:
+        level = logging.DEBUG
+    elif args.verbose == 1:
+        level = logging.INFO
+    else:
+        level = logging.WARNING
+    logging.basicConfig(stream=sys.stderr, level=level, format="%(levelname)s: %(message)s")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="album-covers", description="Fetch album cover art from MusicBrainz + Cover Art Archive."
     )
+    parser.add_argument(
+        "-v", "--verbose", action="count", default=0, help="increase logging detail (-v info, -vv debug)"
+    )
+    parser.add_argument("-q", "--quiet", action="store_true", help="only log errors")
     sub = parser.add_subparsers(dest="command", required=True)
 
     fetch_p = sub.add_parser("fetch", help="find and download an album's cover art via MusicBrainz + Cover Art Archive")
@@ -56,6 +74,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    _configure_logging(args)
     return args.func(args)
 
 

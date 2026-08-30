@@ -70,6 +70,30 @@ url = find_cover_url("Kind of Blue", artist="Miles Davis", size=1200)
 Exports: `Album`, `CoverArtNotFound`, `search_albums`, `find_album`,
 `artwork_url`, `download_url`, `find_cover_url`, `download_cover`.
 
+## Logging
+
+The library logs via the stdlib `logging` module under the `album_covers`
+name (`NullHandler`ed by default, so importing it is silent). One line
+per resolved cover (INFO), per skipped/no-art candidate (DEBUG/INFO), and
+per rejected match or rate-limit retry (WARNING); query strings and
+candidate scores at DEBUG.
+
+**CLI:** `-v` for INFO, `-vv` for DEBUG, `-q` to drop to errors-only.
+Logs go to stderr; stdout stays just the resolved URL / written path.
+
+```
+album-covers fetch "Kind of Blue" --artist "Miles Davis" -v
+```
+
+**As a library:** nothing extra is needed if the host app already
+configures `logging`; to see just this package's records:
+
+```python
+import logging
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("album_covers").setLevel(logging.INFO)
+```
+
 ## Rate limiting
 
 Throttling and retry against MusicBrainz/Cover Art Archive's shared rate

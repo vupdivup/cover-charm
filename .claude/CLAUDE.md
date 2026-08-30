@@ -41,6 +41,38 @@ in-code (docstring or a short comment at the decision site) — briefly,
 covering the *why*, not a restatement of the code. Match the style of
 the surrounding code.
 
+## Logging
+
+Every package can be driven both as a CLI and as a library by another
+package in this workspace (e.g. `album-covers` from a future caller in
+`render` or `album_seed`), so logging follows the standard stdlib
+`logging` library/application split:
+
+- **Library modules only emit.** Each module gets
+  `logger = logging.getLogger(__name__)` and calls
+  `logger.debug/info/warning/error` — never `print`, never configures
+  handlers, never calls `logging.basicConfig`. Use lazy `%s` formatting
+  (`logger.info("...%s", x)`, not f-strings) so unemitted records cost
+  nothing in hot/bulk loops.
+- **Each package's `__init__.py` attaches a `logging.NullHandler()`** to
+  its top-level logger, so importing the package is silent and doesn't
+  trigger the stdlib's "no handlers found" warning when the host hasn't
+  configured logging.
+- **Only a `cli.py` configures handlers**, via `logging.basicConfig` on
+  `sys.stderr`, gated by `-v/--verbose` (repeatable: info, then debug)
+  and `-q/--quiet` flags. stdout stays reserved for the CLI's machine
+  output (a URL, a written path, JSON); stderr carries both today's
+  error messages and the new log stream.
+- **A caller package needs nothing extra**: configuring `logging` once in
+  its own entry point picks up every dependency package's records for
+  free, and `logging.getLogger("<dep_package>").setLevel(...)` tunes just
+  one of them.
+- Level guide: DEBUG for per-request detail (queries, scores, byte
+  counts), INFO for one line per successful/skipped unit of work,
+  WARNING for retried/degraded paths, ERROR only for something the
+  caller must handle. See `packages/album-covers/src/album_covers/fetch.py`
+  and `cli.py` for a worked example.
+
 ## Testing & verification
 
 No automated test suite yet. Verify changes by running the CLI
