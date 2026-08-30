@@ -87,6 +87,8 @@ ranked entry, so the total still equals `count`.
 - `title` — album title only. Strip "(Deluxe)", "(Anniversary
   Edition)", and other parenthetical reissue tags.
 - `artist` — primary credited artist, exactly as billed.
+- `release_year` — original release year (int), from step 1's
+  original-release-date rule, never reissue year.
 
 ## 6. Verify the count
 
@@ -101,20 +103,20 @@ during dedupe — don't trust the running total, recount.
 names a path (slug mirrors the normalized period: `albums-2015.json`,
 `albums-2015-06.json`, `albums-2010-2014.json`, `albums-1990s.json`).
 
-A JSON array, 2-space indent, **title and artist only** — no year, no
+A JSON array, 2-space indent, **title, artist, release_year only** — no
 rank, no source, no wrapper object:
 
 ```json
 [
-  { "title": "To Pimp a Butterfly", "artist": "Kendrick Lamar" },
-  { "title": "1989", "artist": "Taylor Swift" }
+  { "title": "To Pimp a Butterfly", "artist": "Kendrick Lamar", "release_year": 2015 },
+  { "title": "1989", "artist": "Taylor Swift", "release_year": 2014 }
 ]
 ```
 
 ## 8. Report
 
 Re-read the written file first: confirm the array length equals `count`
-and every object has exactly `title` and `artist`. Report the verified
+and every object has exactly `title`, `artist`, `release_year`. Report the verified
 number, not the intended one.
 
 Print the resolved period, the file path, the verified count, and one
