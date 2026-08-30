@@ -26,3 +26,6 @@ build-backend = "uv_build"
 # uv_build's src layout only ships one top-level module by default;
 # this repo hosts two independent packages side by side under src/.
 module-name = ["cover_art", "album_seed"]
+
+[tool.uv.workspace]
+members = ["packages/render"]
