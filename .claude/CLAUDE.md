@@ -5,6 +5,9 @@
 Always use the `caveman` skill (ultra-compressed communication mode)
 for all responses in this repo.
 
+Do not react or comment on shell mode commands (`!`-prefixed) run by
+the user unless asked to.
+
 ## Overview
 
 This is a `uv` workspace with three packages:
