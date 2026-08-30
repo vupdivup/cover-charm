@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+## Assistant behavior
+
+Always use the `caveman` skill (ultra-compressed communication mode)
+for all responses in this repo.
+
 ## Overview
 
 `cover-art` fetches album cover art from iTunes, normalizes it to a
