@@ -9,24 +9,24 @@ for all responses in this repo.
 
 This is a `uv` workspace with three packages:
 
-- `cover-art` (`src/cover_art/`) fetches album cover art from iTunes,
-  normalizes it to a square, and uploads it to Cloudflare R2. See
-  `src/cover_art/README.md` for full usage.
 - `album_seed` (`src/album_seed/`) downloads a Kaggle album-ratings
   dataset and exports the top albums by popularity in the shape
-  `cover_art` expects — source-agnostic; the dataset slug is a
+  `album_covers` expects — source-agnostic; the dataset slug is a
   tunable, currently defaulting to AlbumOfTheYear's top-5000. See
   `src/album_seed/README.md` for full usage.
+- `album-covers` (`packages/album-covers/`) fetches album cover art
+  from iTunes. See `packages/album-covers/src/album_covers/README.md`
+  for full usage.
 - `render` (`packages/render/`) swaps an image into a Blender
   animation's texture, renders it, and assembles the frames into a
   GIF. See `packages/render/src/render/README.md` for full usage.
 
-`cover_art` and `album_seed` live under `src/` and share one
-`pyproject.toml`; `render` is a separate `uv` workspace member with
-its own. Each package has its own `cli.py` entry point and its own
-Python API; how the modules inside a package are split up is a
-per-package call, not a fixed convention to enforce across the
-workspace.
+`album_seed` lives under `src/` and is the root package;
+`album-covers` and `render` are separate `uv` workspace members under
+`packages/`, each with its own `pyproject.toml`. Each package has its
+own `cli.py` entry point and its own Python API; how the modules
+inside a package are split up is a per-package call, not a fixed
+convention to enforce across the workspace.
 
 ## Environment & dependencies
 
@@ -44,7 +44,7 @@ the surrounding code.
 ## Testing & verification
 
 No automated test suite yet. Verify changes by running the CLI
-(`uv run cover-art ...`). Add the test command here once a suite exists.
+(`uv run album-covers ...`). Add the test command here once a suite exists.
 
 ## Git & commits
 
@@ -53,10 +53,6 @@ asks. Never commit `.env` or other files holding secrets.
 
 ## Configuration & secrets
 
-R2 credentials/bucket are read from environment variables only —
-`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
-`R2_BUCKET` — never passed as flags or committed to the repo.
-
 Kaggle credentials, same rule: `KAGGLE_API_TOKEN` (or the legacy
 `KAGGLE_USERNAME`/`KAGGLE_KEY` pair) as environment variables only —
 never a flag, never a `~/.kaggle/*` credentials file.
@@ -64,10 +60,9 @@ never a flag, never a `~/.kaggle/*` credentials file.
 ## External services
 
 - **iTunes Search API** — uncredentialed, rate-limited (~20 req/min).
-  Throttle/retry knobs live in `src/cover_art/fetch.py`
+  Throttle/retry knobs live in
+  `packages/album-covers/src/album_covers/fetch.py`
   (`SEARCH_INTERVAL`, `MAX_RETRIES`, `INITIAL_BACKOFF`).
-- **Cloudflare R2** — reached via its S3-compatible endpoint
-  (`region_name="auto"`), configured in `src/cover_art/upload.py`.
 - **Kaggle** — accessed via `kagglehub`. Auth from `KAGGLE_API_TOKEN`
   (current single-token scheme) or `KAGGLE_USERNAME`/`KAGGLE_KEY`
   (legacy) env vars — never a flag, never a credentials file. Dataset

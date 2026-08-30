@@ -1,0 +1,19 @@
+[project]
+name = "album-covers"
+version = "0.1.0"
+description = "Fetch album cover art from iTunes"
+readme = "src/album_covers/README.md"
+authors = [
+    { name = "vupdivup", email = "vnmatt2003@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.1",
+]
+
+[project.scripts]
+album-covers = "album_covers.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.19,<0.12.0"]
+build-backend = "uv_build"
