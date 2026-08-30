@@ -11,3 +11,11 @@ wheels/
 
 # Local secrets
 .env
+
+# Local test/output assets -- Blender scenes, source images, rendered GIFs
+*.blend
+*.blend1
+*.jpg
+*.jpeg
+*.png
+*.gif
