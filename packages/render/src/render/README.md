@@ -77,7 +77,9 @@ Exports: `render_gif`, `RenderResult`, `BlenderError`, `find_blender`,
 - If the target image is packed into the `.blend`, it's unpacked
   before the swap (a packed image otherwise ignores a new file path).
 - GIF is a 256-colour paletted format: frames are quantized with
-  adaptive palette selection, and alpha is flattened, not preserved.
+  adaptive palette selection, and alpha is preserved as binary
+  transparency (thresholded at 128) -- no partial/anti-aliased
+  transparency, since GIF has no true alpha channel.
 - **Windows support is implemented but not yet verified on a native
   Windows host** — everything here has been tested from WSL against a
   Windows-side Blender install. If you hit a platform-specific issue

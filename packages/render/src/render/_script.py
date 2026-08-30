@@ -72,6 +72,11 @@ if scene.render.engine == "CYCLES":
 # codecs only, so PNG has to be unlocked by switching to "IMAGE" first.
 scene.render.image_settings.media_type = "IMAGE"
 scene.render.image_settings.file_format = "PNG"
+# Frames need an alpha channel for gif.py's transparency handling to have
+# anything to work with -- RGB frames render fully opaque regardless of
+# the scene's background/world setup.
+scene.render.image_settings.color_mode = "RGBA"
+scene.render.film_transparent = True
 # Trailing "frame_" prefix is what makes Blender emit frame_0001.png etc.
 # rather than treating --out as a bare directory.
 scene.render.filepath = args.out.rstrip("/\\") + "/frame_"
