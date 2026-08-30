@@ -9,11 +9,10 @@ under Blender's own bundled Python (currently 3.13), not this venv.
 
 from __future__ import annotations
 
+import glob
 import os
-import platform
 import re
 import shutil
-import string
 import subprocess
 from pathlib import Path
 
@@ -21,42 +20,25 @@ BLENDER_TIMEOUT = 3600  # seconds; tunable, read at call time
 
 _SCRIPT = Path(__file__).with_name("_script.py")
 
+# Tried in order, absolute and platform-specific; a pattern for the wrong OS
+# just matches nothing, so there's no need to branch on platform.system()
+# first -- glob.glob() is already a no-op on paths that don't exist.
+_INSTALL_GLOBS = (
+    "/mnt/*/Program Files/Blender Foundation/*/blender.exe",  # WSL
+    "/mnt/*/Program Files (x86)/Blender Foundation/*/blender.exe",
+    "C:/Program Files/Blender Foundation/*/blender.exe",  # Windows
+    "C:/Program Files (x86)/Blender Foundation/*/blender.exe",
+    "/Applications/Blender.app/Contents/MacOS/Blender",  # macOS
+    "/opt/blender*/blender",  # Linux
+    "/usr/share/blender/*/blender",
+)
+
 
 class BlenderError(Exception):
     """Raised when Blender cannot be located or exits with an error."""
 
 
-def _candidate_roots() -> list[Path]:
-    """Directories to search for a Blender install, per host platform."""
-    system = platform.system()
-    if system == "Windows":
-        return [Path(p) for p in (os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)")) if p]
-    if os.path.isdir("/mnt") and any(Path(f"/mnt/{d}/Program Files").is_dir() for d in string.ascii_lowercase):
-        # WSL: Windows drives are mounted under /mnt/<drive letter>.
-        return [Path(f"/mnt/{d}/Program Files") for d in string.ascii_lowercase if Path(f"/mnt/{d}/Program Files").is_dir()]
-    if system == "Darwin":
-        return [Path("/Applications")]
-    return [Path("/opt"), Path("/usr/share")]
-
-
-_GLOB_PATTERNS = (
-    "Blender Foundation/Blender */blender.exe",  # Windows / WSL-mounted Windows
-    "Blender Foundation/blender-*/blender.exe",
-    "blender-*/blender",  # Linux tarball installs under /opt
-    "blender*/blender",
-)
-
-
-def _versioned_candidates(root: Path) -> list[Path]:
-    """Blender executables directly under one search root, unsorted."""
-    found = [match for pattern in _GLOB_PATTERNS for match in root.glob(pattern)]
-    mac_app = root / "Blender.app/Contents/MacOS/Blender"
-    if mac_app.exists():
-        found.append(mac_app)
-    return found
-
-
-def _version_key(path: Path) -> tuple[int, ...]:
+def _version_key(path: str) -> tuple[int, ...]:
     """Parse a version out of a Blender install path, for newest-last sorting."""
     match = re.search(r"(\d+)\.(\d+)", str(path))
     return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
@@ -66,9 +48,9 @@ def find_blender(explicit: str | Path | None = None) -> Path:
     """Locate a Blender executable.
 
     Checked in order: ``explicit``, the ``BLENDER`` env var, ``blender``
-    / ``blender.exe`` on ``PATH``, then the default per-platform install
-    directories (newest version wins). Raises BlenderError listing
-    everywhere it looked if nothing is found.
+    / ``blender.exe`` on ``PATH``, then the default install locations for
+    Windows, WSL, macOS, and Linux (newest version wins). Raises
+    BlenderError listing everywhere it looked if nothing is found.
     """
     checked = []
 
@@ -91,10 +73,10 @@ def find_blender(explicit: str | Path | None = None) -> Path:
             return Path(found)
         checked.append(f"{name!r} on PATH")
 
-    candidates = [c for root in _candidate_roots() for c in _versioned_candidates(root)]
+    candidates = [match for pattern in _INSTALL_GLOBS for match in glob.glob(pattern)]
     if candidates:
-        return max(candidates, key=_version_key)
-    checked.extend(str(root) for root in _candidate_roots())
+        return Path(max(candidates, key=_version_key))
+    checked.extend(_INSTALL_GLOBS)
 
     raise BlenderError("could not find a Blender install; checked: " + ", ".join(checked))
 
