@@ -1,4 +1,6 @@
-"""album_covers: fetch album cover art from iTunes."""
+"""album_covers: fetch album cover art via MusicBrainz + Cover Art Archive."""
+
+import logging
 
 from .fetch import (
     Album,
@@ -21,3 +23,8 @@ __all__ = [
     "find_cover_url",
     "download_cover",
 ]
+
+# Library convention: emit records but stay silent unless a host app
+# configures logging. Without this, the stdlib prints a "no handlers
+# found" warning to stderr the first time this package logs anything.
+logging.getLogger(__name__).addHandler(logging.NullHandler())

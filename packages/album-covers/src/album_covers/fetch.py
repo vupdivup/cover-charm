@@ -15,6 +15,7 @@ checked, so it replaces iTunes outright rather than sitting behind it.
 from __future__ import annotations
 
 import difflib
+import logging
 import re
 import time
 import unicodedata
@@ -23,6 +24,8 @@ from dataclasses import dataclass
 import httpx
 
 from ._util import Throttle
+
+logger = logging.getLogger(__name__)
 
 _MB_SEARCH_URL = "https://musicbrainz.org/ws/2/release-group/"
 _CAA_URL = "https://coverartarchive.org/release-group/"
@@ -176,9 +179,18 @@ def _get_with_retry(client: httpx.Client, url: str, **kwargs) -> httpx.Response:
             response.raise_for_status()
             return response
         except httpx.HTTPStatusError as exc:
-            if not _is_rate_limited(exc) or attempt >= MAX_RETRIES:
+            if not _is_rate_limited(exc):
                 raise
-            time.sleep(INITIAL_BACKOFF * (2**attempt))
+            if attempt >= MAX_RETRIES:
+                logger.warning(
+                    "giving up after %d retries on %s: HTTP %d", attempt, url, exc.response.status_code
+                )
+                raise
+            backoff = INITIAL_BACKOFF * (2**attempt)
+            logger.warning(
+                "HTTP %d from %s, retry %d/%d in %.1fs", exc.response.status_code, url, attempt + 1, MAX_RETRIES, backoff
+            )
+            time.sleep(backoff)
             attempt += 1
 
 
@@ -201,18 +213,36 @@ def search_albums(title: str, artist: str | None = None, *, limit: int = 25) -> 
     params = {"query": query, "fmt": "json", "limit": limit}
     headers = {"User-Agent": _USER_AGENT, "Accept": "application/json"}
     _search_throttle.wait()
+    logger.debug("MusicBrainz query: %s", query)
     with httpx.Client(headers=headers, timeout=10.0, follow_redirects=True) as client:
         response = _get_with_retry(client, _MB_SEARCH_URL, params=params)
         data = response.json()
 
     results = data.get("release-groups", [])
     parsed = [(a, r) for a, r in ((_to_album(r), r) for r in results) if a is not None]
+    logger.debug("MusicBrainz returned %d release group(s) for %r", len(results), title)
 
     scored = [(a, _match_score(a, title, artist, r)) for a, r in parsed]
-    scored = [(a, s) for a, s in scored if s >= MATCH_THRESHOLD]
     scored.sort(key=lambda pair: pair[1], reverse=True)
+    logger.debug(
+        "top candidates for %r: %s",
+        title,
+        [(a.title, a.artist, round(s, 3)) for a, s in scored[:5]],
+    )
 
-    return [a for a, _ in scored]
+    matched = [(a, s) for a, s in scored if s >= MATCH_THRESHOLD]
+    if not matched:
+        best = scored[0] if scored else None
+        logger.warning(
+            "no candidate above MATCH_THRESHOLD=%.2f for title=%r artist=%r (best: %s, score=%.3f)",
+            MATCH_THRESHOLD,
+            title,
+            artist,
+            best[0].title if best else None,
+            best[1] if best else 0.0,
+        )
+
+    return [a for a, _ in matched]
 
 
 def find_album(title: str, artist: str | None = None) -> Album | None:
@@ -243,12 +273,14 @@ def artwork_url(album: Album, *, size: int = 600) -> str | None:
             response = _get_with_retry(client, _CAA_URL + album.release_group_id)
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code == 404:
+                logger.info("no Cover Art Archive entry for %r (%s)", album.title, album.release_group_id)
                 return None
             raise
         data = response.json()
 
     images = data.get("images", [])
     if not images:
+        logger.info("Cover Art Archive entry for %r (%s) has no images", album.title, album.release_group_id)
         return None
     image = next((i for i in images if i.get("front")), images[0])
 
@@ -256,9 +288,12 @@ def artwork_url(album: Album, *, size: int = 600) -> str | None:
     url = image["thumbnails"].get(str(nearest)) if nearest else None
     url = url or image.get("image")
     if url is None:
+        logger.info("no usable thumbnail/image URL for %r (%s)", album.title, album.release_group_id)
         return None
     # Cover Art Archive links are plain http:// even over an https request.
-    return url.replace("http://", "https://", 1)
+    url = url.replace("http://", "https://", 1)
+    logger.debug("resolved artwork for %r (%s) near %dpx: %s", album.title, album.release_group_id, size, url)
+    return url
 
 
 def download_url(url: str) -> bytes:
@@ -273,6 +308,7 @@ def download_url(url: str) -> bytes:
     headers = {"User-Agent": _USER_AGENT}
     with httpx.Client(headers=headers, timeout=10.0, follow_redirects=True) as client:
         response = _get_with_retry(client, url)
+        logger.debug("downloaded %d bytes from %s", len(response.content), url)
         return response.content
 
 
@@ -284,10 +320,28 @@ def find_cover_url(title: str, artist: str | None = None, *, size: int = 600) ->
     release group has art in Cover Art Archive -- the next-best textual
     match often does.
     """
-    for album in search_albums(title, artist)[:_MAX_ARTWORK_LOOKUPS]:
+    candidates = search_albums(title, artist)[:_MAX_ARTWORK_LOOKUPS]
+    for album in candidates:
         url = artwork_url(album, size=size)
         if url is not None:
+            logger.info(
+                "cover found for title=%r artist=%r -> %r by %r (%s)",
+                title,
+                artist,
+                album.title,
+                album.artist,
+                album.release_group_id,
+            )
             return url
+        logger.debug("no art for candidate %r (%s), trying next", album.title, album.release_group_id)
+
+    if candidates:
+        logger.warning(
+            "no artwork found among top %d candidate(s) for title=%r artist=%r",
+            len(candidates),
+            title,
+            artist,
+        )
     return None
 
 
