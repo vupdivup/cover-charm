@@ -7,35 +7,26 @@ for all responses in this repo.
 
 ## Overview
 
-This repo hosts two packages under `src/`, sharing one `pyproject.toml`.
+This is a `uv` workspace with three packages:
 
-`cover_art` fetches album cover art from iTunes, normalizes it to a
-square, and uploads it to Cloudflare R2. `fetch`, `normalize`, and
-`upload` are independent modules; `pipeline` composes them; `cli` is
-the entry point. See `src/cover_art/README.md` for full usage.
+- `cover-art` (`src/cover_art/`) fetches album cover art from iTunes,
+  normalizes it to a square, and uploads it to Cloudflare R2. See
+  `src/cover_art/README.md` for full usage.
+- `album_seed` (`src/album_seed/`) downloads a Kaggle album-ratings
+  dataset and exports the top albums by popularity in the shape
+  `cover_art` expects — source-agnostic; the dataset slug is a
+  tunable, currently defaulting to AlbumOfTheYear's top-5000. See
+  `src/album_seed/README.md` for full usage.
+- `render` (`packages/render/`) swaps an image into a Blender
+  animation's texture, renders it, and assembles the frames into a
+  GIF. See `packages/render/src/render/README.md` for full usage.
 
-`album_seed` downloads a Kaggle album-ratings dataset and exports the
-top albums by popularity in the shape `cover_art` expects — source-
-agnostic; the dataset slug is a tunable, currently defaulting to
-AlbumOfTheYear's top-5000. `download`, `select`, and `export` are
-independent modules; `pipeline` composes them; `cli` is the entry
-point. See `src/album_seed/README.md` for full usage.
-
-## Architecture
-
-New packages in this repo follow the same planning method:
-
-- Split the package into one module per business step (e.g. fetch,
-  normalize, upload), not by technical layer.
-- Each module stays independent of its siblings — no importing between
-  them — and exposes a plain Python API plus its own CLI subcommand, so
-  it's runnable and testable in isolation.
-- Exactly one `pipeline` module is allowed to import the others; it
-  composes them into the end-to-end call and exposes any batch variant.
-- `cli.py` is the sole exception boundary and the package's entry
-  point: one `_cmd_<name>(args) -> int` per subcommand, dispatched via
-  `set_defaults(func=...)`, each catching its own module's exceptions
-  and printing `str(exc)` to stderr on failure.
+`cover_art` and `album_seed` live under `src/` and share one
+`pyproject.toml`; `render` is a separate `uv` workspace member with
+its own. Each package has its own `cli.py` entry point and its own
+Python API; how the modules inside a package are split up is a
+per-package call, not a fixed convention to enforce across the
+workspace.
 
 ## Environment & dependencies
 
@@ -81,3 +72,10 @@ never a flag, never a `~/.kaggle/*` credentials file.
   (current single-token scheme) or `KAGGLE_USERNAME`/`KAGGLE_KEY`
   (legacy) env vars — never a flag, never a credentials file. Dataset
   slug is `DATASET` in `src/album_seed/download.py`.
+- **Blender** — a local install, driven as a subprocess in background
+  mode (`--background`) by `packages/render/src/render/blender.py`,
+  not imported as the `bpy` package. Auto-detected via `PATH` and the
+  default per-platform install directories, or point at it explicitly
+  with `--blender`/`BLENDER`. Works from WSL against a Windows-side
+  install — paths are translated with `wslpath` only in that case;
+  native Windows and native Linux/macOS paths pass through unchanged.

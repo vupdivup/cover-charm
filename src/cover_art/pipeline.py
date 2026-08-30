@@ -1,9 +1,7 @@
-"""Module 4: tie fetch, normalize, and upload together into one call.
+"""Tie fetch, normalize, and upload together into one call.
 
-This is the only module in the package that imports the other three --
-fetch, normalize, and upload stay independent of each other. Everything
-here happens in memory: album art in, normalized bytes to R2, nothing
-touches disk unless ``save`` is given.
+Everything here happens in memory: album art in, normalized bytes to
+R2, nothing touches disk unless ``save`` is given.
 
 ``publish_covers`` runs the same pipeline over many albums and is
 resilient to a single album failing. Throttling and retry against the
