@@ -15,8 +15,8 @@ This is a `uv` workspace with three packages:
   tunable, currently defaulting to AlbumOfTheYear's top-5000. See
   `src/album_seed/README.md` for full usage.
 - `album-covers` (`packages/album-covers/`) fetches album cover art
-  from iTunes. See `packages/album-covers/src/album_covers/README.md`
-  for full usage.
+  via MusicBrainz + Cover Art Archive. See
+  `packages/album-covers/src/album_covers/README.md` for full usage.
 - `render` (`packages/render/`) swaps an image into a Blender
   animation's texture, renders it, and assembles the frames into a
   GIF. See `packages/render/src/render/README.md` for full usage.
@@ -59,10 +59,12 @@ never a flag, never a `~/.kaggle/*` credentials file.
 
 ## External services
 
-- **iTunes Search API** — uncredentialed, rate-limited (~20 req/min).
-  Throttle/retry knobs live in
-  `packages/album-covers/src/album_covers/fetch.py`
-  (`SEARCH_INTERVAL`, `MAX_RETRIES`, `INITIAL_BACKOFF`).
+- **MusicBrainz + Cover Art Archive** — uncredentialed, rate-limited
+  (~1 req/sec, shared across both since Cover Art Archive is keyed by
+  MusicBrainz's MBIDs); requires a descriptive `User-Agent`. Throttle/
+  retry knobs live in `packages/album-covers/src/album_covers/fetch.py`
+  (`SEARCH_INTERVAL`, `MAX_RETRIES`, `INITIAL_BACKOFF`). Fuzzy-match
+  threshold for accepting a result is `MATCH_THRESHOLD` in same file.
 - **Kaggle** — accessed via `kagglehub`. Auth from `KAGGLE_API_TOKEN`
   (current single-token scheme) or `KAGGLE_USERNAME`/`KAGGLE_KEY`
   (legacy) env vars — never a flag, never a credentials file. Dataset
