@@ -9,7 +9,7 @@ from album_covers import CoverArtNotFound, artwork_url, download_url, find_album
 from .config import Settings
 from .db import StoredAlbum, connect, upsert_album
 from .objects import client as s3_client
-from .objects import cover_key, ensure_bucket, put_cover
+from .objects import cover_key, ensure_bucket, put_object
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +46,8 @@ def upload_album(
     # A row must never point at an object that doesn't exist, so the
     # upload happens before the DB write. The reverse failure (orphan
     # object, no row) is harmless -- the next upload overwrites the key.
-    ensure_bucket(s3, settings)
-    cover_url = put_cover(s3, settings, key, data)
+    ensure_bucket(s3, settings, settings.minio_bucket)
+    cover_url = put_object(s3, settings, settings.minio_bucket, key, data, content_type="image/jpeg")
 
     with connect(settings) as conn:
         stored = upsert_album(

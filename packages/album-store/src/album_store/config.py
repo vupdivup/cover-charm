@@ -15,6 +15,10 @@ class Settings:
     minio_access_key: str
     minio_secret_key: str
     minio_bucket: str
+    # Separate bucket for rendered GIFs -- covers and GIFs are different
+    # media with different producers (album-covers vs. render), so they
+    # don't share a bucket even though they share this DB/object store.
+    minio_gif_bucket: str
     # The URL boto3 talks to and the URL stored in the DB can differ (e.g.
     # a container-internal host vs. localhost for whoever reads the row
     # later), so this is allowed to diverge from minio_endpoint.
@@ -31,5 +35,6 @@ class Settings:
             minio_access_key=os.environ.get("MINIO_ACCESS_KEY", "minioadmin"),
             minio_secret_key=os.environ.get("MINIO_SECRET_KEY", "minioadmin"),
             minio_bucket=os.environ.get("MINIO_BUCKET", "covers"),
+            minio_gif_bucket=os.environ.get("MINIO_GIF_BUCKET", "gifs"),
             minio_public_endpoint=os.environ.get("MINIO_PUBLIC_ENDPOINT", minio_endpoint),
         )

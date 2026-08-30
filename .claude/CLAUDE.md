@@ -106,8 +106,9 @@ asks. Never commit `.env` or other files holding secrets.
   defaults). Postgres holds the `albums` table (schema in
   `sql/init.sql`, mirrored in
   `packages/album-store/src/album_store/schema.sql`); MinIO is the
-  S3-compatible object store for cover images, accessed with boto3.
+  S3-compatible object store, accessed with boto3, split across two
+  buckets: `covers` (album art) and `gifs` (rendered via `render`).
   Config env vars (`DATABASE_URL`, `MINIO_ENDPOINT`,
   `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`, `MINIO_BUCKET`,
-  `MINIO_PUBLIC_ENDPOINT`) are read in
+  `MINIO_GIF_BUCKET`, `MINIO_PUBLIC_ENDPOINT`) are read in
   `packages/album-store/src/album_store/config.py`.

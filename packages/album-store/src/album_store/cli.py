@@ -1,4 +1,4 @@
-"""Command-line interface for album_store: init and upload subcommands."""
+"""Command-line interface for album_store: init, upload, render subcommands."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from .config import Settings
 from .db import connect, ensure_schema
 from .objects import client as s3_client
 from .objects import ensure_bucket
+from .render import render_albums
 from .upload import upload_album
 
 
@@ -19,7 +20,8 @@ def _cmd_init(args: argparse.Namespace) -> int:
     settings = Settings.from_env()
     with connect(settings) as conn:
         ensure_schema(conn)
-    ensure_bucket(s3_client(settings), settings)
+    ensure_bucket(s3_client(settings), settings, settings.minio_bucket)
+    ensure_bucket(s3_client(settings), settings, settings.minio_gif_bucket)
     print("ready")
     return 0
 
@@ -32,6 +34,25 @@ def _cmd_upload(args: argparse.Namespace) -> int:
         print(str(exc), file=sys.stderr)
         return 1
     print(stored.cover_url)
+    return 0
+
+
+def _cmd_render(args: argparse.Namespace) -> int:
+    settings = Settings.from_env()
+    outcomes, failures = render_albums(
+        blend=args.blend,
+        material=args.material,
+        all=args.all,
+        fps=args.fps,
+        limit=args.limit,
+        blender=args.blender,
+        settings=settings,
+    )
+    for outcome in outcomes:
+        print(outcome.gif_url)
+    if failures:
+        print(f"{failures} album(s) failed to render, see log", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -89,6 +110,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="artwork size in pixels, snapped to the nearest available (250/500/1200) (default: 600)",
     )
     upload_p.set_defaults(func=_cmd_upload)
+
+    render_p = sub.add_parser(
+        "render",
+        help="render stored covers into GIFs and store them (batch; skips albums already rendered)",
+        parents=[logging_parent],
+    )
+    render_p.add_argument("--blend", required=True, help="path to the Blender animation file")
+    render_p.add_argument("--material", required=True, help="material whose image texture gets swapped")
+    render_p.add_argument(
+        "--all", action="store_true", help="re-render every album, not just ones missing a GIF"
+    )
+    render_p.add_argument("--fps", type=float, default=24.0, help="GIF frame rate (default: 24.0)")
+    render_p.add_argument("--limit", type=int, default=None, help="render at most N albums")
+    render_p.add_argument("--blender", default=None, help="path to the Blender executable")
+    render_p.set_defaults(func=_cmd_render)
 
     return parser
 

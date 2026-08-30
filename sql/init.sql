@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS albums (
     year        INT,
     cover_key   TEXT NOT NULL,
     cover_url   TEXT NOT NULL,
+    gif_key     TEXT,
+    gif_url     TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
