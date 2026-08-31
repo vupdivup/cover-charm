@@ -78,6 +78,29 @@ body {
   pointer-events: none;
 }
 
+.gh-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  color: var(--fg-muted);
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.gh-link:hover,
+.gh-link:focus-visible {
+  color: var(--fg);
+  background: var(--border);
+}
+
+.gh-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
 .search input {
   width: 100%;
   padding: 0.6rem 0.75rem 0.6rem 2.25rem;
