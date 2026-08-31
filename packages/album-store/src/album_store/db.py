@@ -20,12 +20,13 @@ ON CONFLICT (lower(artist), lower(title)) DO UPDATE SET
     cover_key = EXCLUDED.cover_key,
     cover_url = EXCLUDED.cover_url,
     updated_at = now()
-RETURNING id, artist, title, year, cover_key, cover_url, gif_key, gif_url;
+RETURNING id, artist, title, year, cover_key, cover_url, gif_key, gif_url, preview_key, preview_url;
 """
-# Deliberately does not touch gif_key/gif_url -- re-uploading an
-# album's cover must not wipe out a GIF already rendered for it.
+# Deliberately does not touch gif_key/gif_url/preview_key/preview_url --
+# re-uploading an album's cover must not wipe out a GIF (or its preview)
+# already rendered for it.
 
-_SELECT_COLUMNS = "id, artist, title, year, cover_key, cover_url, gif_key, gif_url"
+_SELECT_COLUMNS = "id, artist, title, year, cover_key, cover_url, gif_key, gif_url, preview_key, preview_url"
 
 
 @dataclass(frozen=True)
@@ -38,6 +39,8 @@ class StoredAlbum:
     cover_url: str
     gif_key: str | None = None
     gif_url: str | None = None
+    preview_key: str | None = None
+    preview_url: str | None = None
 
 
 def connect(settings: Settings) -> psycopg.Connection:
@@ -90,11 +93,23 @@ def albums_to_render(
     return [StoredAlbum(*row) for row in rows]
 
 
-def set_album_gif(conn: psycopg.Connection, album_id: int, *, gif_key: str, gif_url: str) -> None:
+def set_album_gif(
+    conn: psycopg.Connection,
+    album_id: int,
+    *,
+    gif_key: str,
+    gif_url: str,
+    preview_key: str,
+    preview_url: str,
+) -> None:
     with conn.cursor() as cur:
         cur.execute(
-            "UPDATE albums SET gif_key = %s, gif_url = %s, updated_at = now() WHERE id = %s",
-            (gif_key, gif_url, album_id),
+            """
+            UPDATE albums
+            SET gif_key = %s, gif_url = %s, preview_key = %s, preview_url = %s, updated_at = now()
+            WHERE id = %s
+            """,
+            (gif_key, gif_url, preview_key, preview_url, album_id),
         )
     conn.commit()
-    logger.debug("set gif for album id=%s -> %s", album_id, gif_url)
+    logger.debug("set gif for album id=%s -> %s (preview -> %s)", album_id, gif_url, preview_url)

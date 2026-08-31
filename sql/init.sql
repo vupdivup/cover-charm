@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS albums (
     cover_url   TEXT NOT NULL,
     gif_key     TEXT,
     gif_url     TEXT,
+    preview_key TEXT,
+    preview_url TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );

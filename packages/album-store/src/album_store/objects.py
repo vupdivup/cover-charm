@@ -34,6 +34,12 @@ def gif_key(artist: str, title: str) -> str:
     return f"gifs/{_slug(artist)}/{_slug(title)}.gif"
 
 
+def preview_key(artist: str, title: str) -> str:
+    # Sibling prefix to gif_key, same (gif) bucket -- a static preview
+    # is a variant of the GIF, not a distinct kind of asset.
+    return f"previews/{_slug(artist)}/{_slug(title)}.gif"
+
+
 def client(settings: Settings):
     """Build an S3 client pointed at the configured MinIO endpoint."""
     return boto3.client(

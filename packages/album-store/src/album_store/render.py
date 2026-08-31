@@ -21,7 +21,7 @@ import render as render_pkg
 from .config import Settings
 from .db import StoredAlbum, albums_to_render, connect, set_album_gif
 from .objects import client as s3_client
-from .objects import ensure_bucket, get_object, gif_key, put_object
+from .objects import ensure_bucket, get_object, gif_key, preview_key, put_object
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ class RenderOutcome:
     artist: str
     title: str
     gif_url: str
+    preview_url: str
 
 
 def _render_one(
@@ -55,24 +56,53 @@ def _render_one(
         image_path = tmp_dir / "cover.jpg"
         image_path.write_bytes(cover_bytes)
 
-        # render_gif resolves a relative `output` against the process
-        # CWD and returns RenderResult.gif unresolved, so this must be
-        # an absolute path.
+        # render_gif resolves a relative `output` (and `preview_output`)
+        # against the process CWD and returns RenderResult paths
+        # unresolved, so both must be absolute.
         gif_path = tmp_dir / "cover.gif"
+        preview_path = tmp_dir / "preview.gif"
         result = render_pkg.render_gif(
-            blend, image_path, material=material, output=gif_path, fps=fps, blender=blender
+            blend,
+            image_path,
+            material=material,
+            output=gif_path,
+            preview_output=preview_path,
+            fps=fps,
+            blender=blender,
         )
         gif_data = result.gif.read_bytes()
+        preview_data = result.preview.read_bytes()
         logger.debug(
-            "rendered %d bytes for album id=%s (%d frame(s))", len(gif_data), album.id, len(result.frames)
+            "rendered %d bytes (+%d preview) for album id=%s (%d frame(s))",
+            len(gif_data),
+            len(preview_data),
+            album.id,
+            len(result.frames),
         )
 
     key = gif_key(album.artist, album.title)
     gif_url = put_object(s3, settings, settings.minio_gif_bucket, key, gif_data, content_type="image/gif")
-    set_album_gif(conn, album.id, gif_key=key, gif_url=gif_url)
 
-    logger.info("rendered album id=%s %r by %r -> %s", album.id, album.title, album.artist, gif_url)
-    return RenderOutcome(album_id=album.id, artist=album.artist, title=album.title, gif_url=gif_url)
+    prev_key = preview_key(album.artist, album.title)
+    preview_url = put_object(
+        s3, settings, settings.minio_gif_bucket, prev_key, preview_data, content_type="image/gif"
+    )
+
+    set_album_gif(
+        conn, album.id, gif_key=key, gif_url=gif_url, preview_key=prev_key, preview_url=preview_url
+    )
+
+    logger.info(
+        "rendered album id=%s %r by %r -> %s (preview -> %s)",
+        album.id,
+        album.title,
+        album.artist,
+        gif_url,
+        preview_url,
+    )
+    return RenderOutcome(
+        album_id=album.id, artist=album.artist, title=album.title, gif_url=gif_url, preview_url=preview_url
+    )
 
 
 def render_albums(
