@@ -20,8 +20,14 @@ This is a `uv` workspace with two packages:
   GIF. See `packages/render/src/render/README.md` for full usage.
 - `album-store` (`packages/album-store/`) fetches a cover via
   `album-covers` and persists it: image to MinIO/S3, metadata + object
-  URL to Postgres. See
+  URL to Postgres. It can also `publish` rendered GIFs by force-pushing
+  them to the `assets-dev` git branch, served over jsDelivr for the
+  `site/` showcase. See
   `packages/album-store/src/album_store/README.md` for full usage.
+- `site/` is a static, no-build showcase page (plain HTML/CSS/JS, not
+  a `uv` workspace member) that browses `assets-dev` GIFs from a
+  checked-in copy of the manifest at `site/data/manifest.json`. See
+  `site/README.md`.
 
 `album-covers` and `render` are `uv` workspace members under
 `packages/`, each with its own `pyproject.toml`. The root
@@ -85,6 +91,13 @@ No automated test suite yet. Verify changes by running the CLI
 
 Only commit (or push, branch, rebase, etc.) when the user explicitly
 asks. Never commit `.env` or other files holding secrets.
+
+**NEVER push unless the user explicitly asks for a push, in that
+specific turn.** A prior "commit pls" / "commit this too" does NOT
+imply push, and push permission does NOT carry over to later commits
+in the same session — ask again, or wait, each time. Committing does
+not require push to "complete" the task; stop after the commit and
+report it, don't chain a push onto it on your own judgment.
 
 ## External services
 

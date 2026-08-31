@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cover Charm</title>
+  <meta name="description" content="Browse rendered album cover animations and copy an embeddable snippet." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&family=Bagel+Fat+One&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // Runs before paint so the stored/system theme applies with no flash.
+    (function () {
+      var stored = localStorage.getItem("theme");
+      var theme = stored === "light" || stored === "dark"
+        ? stored
+        : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
+</head>
+<body>
+  <!--
+    One icon set, defined once, referenced everywhere via <use>.
+    Paths are Lucide (ISC license, lucide.dev) — a single consistent
+    stroke style instead of hand-picked mixed-style SVGs per icon.
+  -->
+  <svg class="icon-sprite" aria-hidden="true">
+    <defs>
+      <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.3-4.3"/>
+      </symbol>
+      <symbol id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+      </symbol>
+      <symbol id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+      </symbol>
+      <symbol id="icon-github" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/>
+        <path d="M9 18c-4.51 2-5-2-7-2"/>
+      </symbol>
+      <symbol id="icon-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/>
+      </symbol>
+      <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+      </symbol>
+      <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18"/>
+        <path d="m6 6 12 12"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <header class="site-header">
+    <div class="site-header__title">
+      <h1>Cover Charm</h1>
+      <p id="count" class="muted" hidden></p>
+    </div>
+    <div class="search">
+      <svg class="search__icon icon" width="18" height="18" aria-hidden="true"><use href="#icon-search"/></svg>
+      <input
+        id="search"
+        type="search"
+        placeholder="Search artist or title…"
+        autocomplete="off"
+        aria-label="Search albums"
+      />
+    </div>
+    <div class="header-actions">
+      <button
+        id="theme-toggle"
+        class="icon-btn"
+        type="button"
+        aria-label="Toggle dark mode"
+      >
+        <svg class="icon-sun icon" width="18" height="18" aria-hidden="true"><use href="#icon-sun"/></svg>
+        <svg class="icon-moon icon" width="18" height="18" aria-hidden="true"><use href="#icon-moon"/></svg>
+      </button>
+      <a
+        class="icon-btn gh-link"
+        href="https://github.com/vupdivup/cover-charm"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="View source on GitHub"
+      >
+        <svg class="icon" width="20" height="20" aria-hidden="true"><use href="#icon-github"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <p id="empty" hidden>No albums match your search.</p>
+    <div id="grid" class="grid" aria-live="polite"></div>
+  </main>
+
+  <dialog id="intro" class="detail intro">
+    <div class="detail__body">
+      <h2>Covers, alive.</h2>
+      <p class="muted intro__lede">Every cover here is a tiny animation, ready to embed.</p>
+
+      <ul class="intro__steps">
+        <li>
+          <svg class="icon" width="20" height="20" aria-hidden="true"><use href="#icon-search"/></svg>
+          <span><strong>Search</strong> by artist or title.</span>
+        </li>
+        <li>
+          <svg class="icon" width="20" height="20" aria-hidden="true"><use href="#icon-sparkles"/></svg>
+          <span><strong>Hover</strong> a cover to see it move.</span>
+        </li>
+        <li>
+          <svg class="icon" width="20" height="20" aria-hidden="true"><use href="#icon-copy"/></svg>
+          <span><strong>Click</strong> one to grab an embed for your README.</span>
+        </li>
+      </ul>
+
+      <form method="dialog">
+        <button type="submit" class="copy-btn intro__dismiss">Let's go</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="detail" class="detail">
+    <form method="dialog" class="detail__close-form">
+      <button type="submit" class="detail__close" aria-label="Close">
+        <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#icon-x"/></svg>
+      </button>
+    </form>
+    <div class="detail__media">
+      <img id="detail-img" alt="" />
+    </div>
+    <div class="detail__body">
+      <h2 id="detail-title"></h2>
+      <p id="detail-sub" class="muted"></p>
+
+      <div class="snippet">
+        <div class="snippet__tabs" role="tablist" aria-label="Snippet format">
+          <button type="button" role="tab" data-format="markdown" aria-selected="true">Markdown</button>
+          <button type="button" role="tab" data-format="html" aria-selected="false">HTML</button>
+          <button type="button" role="tab" data-format="url" aria-selected="false">URL</button>
+        </div>
+        <div class="snippet__panel">
+          <pre id="snippet-code"></pre>
+          <button id="snippet-copy" type="button" class="copy-btn">Copy</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <footer class="site-footer">
+    <p>
+      &copy; <span id="year"></span>
+      <a href="https://github.com/vupdivup" target="_blank" rel="noopener noreferrer">vupdivup</a>.
+      Source on <a href="https://github.com/vupdivup/cover-charm" target="_blank" rel="noopener noreferrer">GitHub</a>.
+    </p>
+    <p>
+      Images served via <a href="https://www.jsdelivr.com/" target="_blank" rel="noopener noreferrer">jsDelivr</a>
+      from the <code>assets-dev</code> branch.
+      <span id="manifest-date"></span>
+    </p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
