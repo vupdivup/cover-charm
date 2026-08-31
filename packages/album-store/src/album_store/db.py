@@ -93,6 +93,20 @@ def albums_to_render(
     return [StoredAlbum(*row) for row in rows]
 
 
+def albums_with_gif(conn: psycopg.Connection, *, limit: int | None = None) -> list[StoredAlbum]:
+    """Albums that have a rendered GIF (gif_key IS NOT NULL) -- the publish set."""
+    where = "WHERE gif_key IS NOT NULL"
+    sql = f"SELECT {_SELECT_COLUMNS} FROM albums {where} ORDER BY id"
+    params: tuple = ()
+    if limit is not None:
+        sql += " LIMIT %s"
+        params = (limit,)
+    with conn.cursor() as cur:
+        cur.execute(sql, params)
+        rows = cur.fetchall()
+    return [StoredAlbum(*row) for row in rows]
+
+
 def set_album_gif(
     conn: psycopg.Connection,
     album_id: int,

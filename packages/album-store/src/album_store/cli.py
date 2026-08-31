@@ -12,6 +12,7 @@ from .config import Settings
 from .db import connect, ensure_schema
 from .objects import client as s3_client
 from .objects import ensure_bucket
+from .publish import PublishError, publish_assets
 from .render import render_albums
 from .upload import upload_album
 
@@ -53,6 +54,22 @@ def _cmd_render(args: argparse.Namespace) -> int:
     if failures:
         print(f"{failures} album(s) failed to render, see log", file=sys.stderr)
         return 1
+    return 0
+
+
+def _cmd_publish(args: argparse.Namespace) -> int:
+    try:
+        result = publish_assets(
+            limit=args.limit,
+            remote=args.remote,
+            branch=args.branch,
+            dry_run=args.dry_run,
+            out_dir=args.output,
+        )
+    except (PublishError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print(result.tree_dir if args.dry_run else result.base_url)
     return 0
 
 
@@ -125,6 +142,24 @@ def build_parser() -> argparse.ArgumentParser:
     render_p.add_argument("--limit", type=int, default=None, help="render at most N albums")
     render_p.add_argument("--blender", default=None, help="path to the Blender executable")
     render_p.set_defaults(func=_cmd_render)
+
+    publish_p = sub.add_parser(
+        "publish",
+        help="push rendered GIFs to a git branch for jsDelivr CDN serving",
+        parents=[logging_parent],
+    )
+    publish_p.add_argument("--limit", type=int, default=None, help="publish at most N albums")
+    publish_p.add_argument("--remote", default="origin", help="git remote to push to (default: origin)")
+    publish_p.add_argument(
+        "--branch", default="assets-dev", help="branch to force-push the asset tree to (default: assets-dev)"
+    )
+    publish_p.add_argument(
+        "--dry-run", action="store_true", help="write the asset tree locally, don't push or purge"
+    )
+    publish_p.add_argument(
+        "-o", "--output", default=None, help="directory to write the asset tree to (default: a temp dir)"
+    )
+    publish_p.set_defaults(func=_cmd_publish)
 
     return parser
 

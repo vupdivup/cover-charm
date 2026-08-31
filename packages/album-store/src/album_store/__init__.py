@@ -4,6 +4,7 @@ import logging
 
 from .config import Settings
 from .db import StoredAlbum
+from .publish import PublishResult, publish_assets
 from .render import RenderOutcome, render_albums
 from .upload import upload_album
 
@@ -13,6 +14,8 @@ __all__ = [
     "upload_album",
     "RenderOutcome",
     "render_albums",
+    "PublishResult",
+    "publish_assets",
 ]
 
 # Library convention: emit records but stay silent unless a host app

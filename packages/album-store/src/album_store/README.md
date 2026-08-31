@@ -11,6 +11,8 @@ persist it, and optionally render it into a GIF (via
   A static single-frame preview is rendered alongside each GIF (same
   Blender run, no extra render time) and stored under a `previews/`
   prefix in the same bucket, URL recorded on the same row too
+- publish every rendered GIF + preview to a git branch, so they're
+  servable over jsDelivr's free GitHub CDN for a public showcase site
 
 ## Local services
 
@@ -59,6 +61,7 @@ uv sync
 album-store init
 album-store upload "In Rainbows" --artist "Radiohead"
 album-store render --blend animation.blend --material CoverMat
+album-store publish
 ```
 
 `init` creates the `albums` table and both buckets if they don't exist
@@ -86,20 +89,67 @@ than aborting the run; the command prints each rendered GIF's URL to
 stdout and exits 1 if any album failed (the preview URL is logged, not
 printed, to keep stdout a plain list of GIF URLs).
 
+`publish` pulls every album with a rendered GIF back out of MinIO and
+force-pushes them, plus a `manifest.json`, as a **single commit on an
+orphan branch** (`--branch`, default `assets-dev`) of the current git
+repo (`--remote`, default `origin`) -- run from within the repo (or a
+worktree of it). The pushed tree mirrors the GIF/preview object keys
+exactly:
+
+```
+manifest.json
+gifs/<artist-slug>/<title-slug>.gif
+previews/<artist-slug>/<title-slug>.gif
+```
+
+jsDelivr then serves the branch straight off GitHub, no deploy step:
+`https://cdn.jsdelivr.net/gh/<owner>/<repo>@<branch>/gifs/...`. Being
+an orphan branch, it carries no history and no `.gitignore`, so the
+committed GIFs bypass this repo's root `*.gif` ignore rule entirely.
+Every publish rewrites the branch from scratch (a fresh orphan, not an
+update), so it never accumulates blob history across runs, and the
+push is a plain `--force` -- the branch is wholly machine-generated
+and disposable. After pushing, `publish` best-effort purges the pushed
+paths from jsDelivr's cache (which otherwise holds a branch ref for up
+to 12h) via `https://purge.jsdelivr.net/`; a purge failure only logs a
+warning, since the assets are already live at origin either way.
+`--dry-run` writes the same tree to `-o`/`--output` (a temp dir if
+unset) and skips git and the purge entirely, e.g. to preview what
+would be published or to feed a local dev server directly off disk.
+There's only one channel today (`assets-dev`) -- no PR, no review, no
+tags; a reviewed/tagged "prod" channel is a natural later addition
+once there's a production site whose releases need pinning.
+
+A future `site/` showcase page is expected to hold one `BASE`
+constant, fetch `${BASE}/manifest.json`, and render
+`${BASE}/${album.gif}`:
+
+```js
+BASE = 'https://cdn.jsdelivr.net/gh/vupdivup/cover-charm@assets-dev'
+```
+
+jsDelivr sends `Access-Control-Allow-Origin: *`, so a `localhost` site
+can fetch this with no proxy.
+
 **Python API:**
 
 ```python
-from album_store import upload_album, render_albums
+from album_store import upload_album, render_albums, publish_assets
 
 stored = upload_album("Kid A", artist="Radiohead")
 print(stored.cover_url)
 
 outcomes, failures = render_albums(blend="animation.blend", material="CoverMat")
+
+result = publish_assets()
+print(result.base_url)
 ```
 
 Exports: `Settings`, `StoredAlbum`, `upload_album`, `RenderOutcome`,
-`render_albums`. `upload_album` raises `album_covers.CoverArtNotFound`
-if no matching album or cover exists.
+`render_albums`, `PublishResult`, `publish_assets`. `upload_album`
+raises `album_covers.CoverArtNotFound` if no matching album or cover
+exists; `publish_assets` raises `PublishError` for a git failure and
+`ValueError` if there's nothing to publish.
 
 ## Logging
 
