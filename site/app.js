@@ -104,6 +104,7 @@ function buildCard(album) {
   img.loading = "lazy";
   img.decoding = "async";
   img.src = previewUrl;
+  img.dataset.preview = previewUrl;
   img.alt = `${album.artist} — ${album.title}`;
   media.appendChild(img);
 
@@ -120,7 +121,7 @@ function buildCard(album) {
 
   card.append(media, body);
 
-  const activate = () => setHot(img, previewUrl, gifUrl);
+  const activate = () => setHot(img, gifUrl);
   const deactivate = () => {
     if (img.src === gifUrl) img.src = previewUrl;
   };
@@ -134,7 +135,7 @@ function buildCard(album) {
   return card;
 }
 
-function setHot(img, previewUrl, gifUrl) {
+function setHot(img, gifUrl) {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (img.src !== gifUrl) img.src = gifUrl;
 
@@ -144,7 +145,10 @@ function setHot(img, previewUrl, gifUrl) {
 
   while (hotCards.length > MAX_HOT_CARDS) {
     const stale = hotCards.shift();
-    if (stale.src !== previewUrl) stale.src = previewUrl;
+    // Each img's own preview, not the just-activated card's — reverting
+    // to the wrong URL here showed a stale card frozen on another
+    // album's art after fast navigation evicted it.
+    if (stale.src !== stale.dataset.preview) stale.src = stale.dataset.preview;
   }
 }
 
