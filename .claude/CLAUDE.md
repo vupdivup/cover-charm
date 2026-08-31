@@ -92,6 +92,13 @@ No automated test suite yet. Verify changes by running the CLI
 Only commit (or push, branch, rebase, etc.) when the user explicitly
 asks. Never commit `.env` or other files holding secrets.
 
+**NEVER push unless the user explicitly asks for a push, in that
+specific turn.** A prior "commit pls" / "commit this too" does NOT
+imply push, and push permission does NOT carry over to later commits
+in the same session — ask again, or wait, each time. Committing does
+not require push to "complete" the task; stop after the commit and
+report it, don't chain a push onto it on your own judgment.
+
 ## External services
 
 - **MusicBrainz + Cover Art Archive** — uncredentialed, rate-limited
