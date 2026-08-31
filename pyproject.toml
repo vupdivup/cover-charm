@@ -7,4 +7,4 @@ requires-python = ">=3.11"
 package = false
 
 [tool.uv.workspace]
-members = ["packages/render", "packages/album-covers"]
+members = ["packages/render", "packages/album-covers", "packages/album-store"]

@@ -18,6 +18,10 @@ This is a `uv` workspace with two packages:
 - `render` (`packages/render/`) swaps an image into a Blender
   animation's texture, renders it, and assembles the frames into a
   GIF. See `packages/render/src/render/README.md` for full usage.
+- `album-store` (`packages/album-store/`) fetches a cover via
+  `album-covers` and persists it: image to MinIO/S3, metadata + object
+  URL to Postgres. See
+  `packages/album-store/src/album_store/README.md` for full usage.
 
 `album-covers` and `render` are `uv` workspace members under
 `packages/`, each with its own `pyproject.toml`. The root
@@ -97,3 +101,14 @@ asks. Never commit `.env` or other files holding secrets.
   with `--blender`/`BLENDER`. Works from WSL against a Windows-side
   install — paths are translated with `wslpath` only in that case;
   native Windows and native Linux/macOS paths pass through unchanged.
+- **Postgres + MinIO** — local only, via `docker compose up -d` (repo
+  root `compose.yaml`; copy `.env.example` to `.env` to override
+  defaults). Postgres holds the `albums` table (schema in
+  `sql/init.sql`, mirrored in
+  `packages/album-store/src/album_store/schema.sql`); MinIO is the
+  S3-compatible object store, accessed with boto3, split across two
+  buckets: `covers` (album art) and `gifs` (rendered via `render`).
+  Config env vars (`DATABASE_URL`, `MINIO_ENDPOINT`,
+  `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`, `MINIO_BUCKET`,
+  `MINIO_GIF_BUCKET`, `MINIO_PUBLIC_ENDPOINT`) are read in
+  `packages/album-store/src/album_store/config.py`.
