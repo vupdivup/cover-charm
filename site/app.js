@@ -74,6 +74,7 @@ async function init() {
       })}.`;
     }
   } catch (err) {
+    countEl.hidden = false;
     countEl.textContent = "Failed to load manifest.";
     console.error("manifest load failed", err);
     return;
@@ -86,8 +87,6 @@ async function init() {
       a.title.localeCompare(b.title)
     );
   });
-
-  countEl.textContent = `${albums.length} album${albums.length === 1 ? "" : "s"}`;
 
   const fuse = new Fuse(albums, {
     keys: [
