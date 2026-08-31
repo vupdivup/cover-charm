@@ -7,7 +7,10 @@ persist it, and optionally render it into a GIF (via
 - upload an album by artist + title -- cover goes to the `covers`
   bucket, metadata + cover URL upserted into Postgres
 - batch-render stored covers into GIFs through a Blender animation --
-  GIFs go to a second `gifs` bucket, GIF URL recorded on the same row
+  GIFs go to a second `gifs` bucket, GIF URL recorded on the same row.
+  A static single-frame preview is rendered alongside each GIF (same
+  Blender run, no extra render time) and stored under a `previews/`
+  prefix in the same bucket, URL recorded on the same row too
 
 ## Local services
 
@@ -80,7 +83,8 @@ to swap is something this package can discover on its own. Other flags:
 [`render`](../../render) does). One album failing (bad material name,
 missing cover object, a Blender error) is logged and skipped rather
 than aborting the run; the command prints each rendered GIF's URL to
-stdout and exits 1 if any album failed.
+stdout and exits 1 if any album failed (the preview URL is logged, not
+printed, to keep stdout a plain list of GIF URLs).
 
 **Python API:**
 

@@ -52,7 +52,8 @@ mismatch, the error lists every node-enabled material name the
 `--fps` (default 24), `--keep-frames` (keep the rendered PNGs in
 `<output stem>_frames/` instead of discarding them), `--blender` (path
 to the executable, overriding auto-detection), `--preview` (write only
-the first frame as a single-frame GIF).
+the first frame as a single-frame GIF), `--preview-output` (also write a
+single-frame preview GIF to this path, alongside the normal output).
 
 Prints the frame count to stderr and the GIF path alone to stdout.
 
@@ -66,6 +67,12 @@ print(result.gif, len(result.frames), result.fps)
 
 # preview=True keeps only the first rendered frame
 still = render_gif("scene.blend", "cover.jpg", material="CoverMaterial", preview=True)
+
+# preview_output writes a second, single-frame GIF from the same render
+result = render_gif(
+    "scene.blend", "cover.jpg", material="CoverMaterial", preview_output="cover_preview.gif"
+)
+print(result.preview)
 ```
 
 Exports: `render_gif`, `RenderResult`, `BlenderError`, `find_blender`,
@@ -88,6 +95,10 @@ Exports: `render_gif`, `RenderResult`, `BlenderError`, `find_blender`,
   authored frame range is always rendered, and everything after the
   first frame is dropped afterward. Narrowing the frame range inside
   `_script.py` would be fragile, so this is deliberate.
+- `--preview-output` is independent of `--preview`: it adds a second,
+  single-frame GIF next to the normal output rather than replacing it,
+  and reuses the frames from the one Blender run instead of rendering
+  again.
 - **Windows support is implemented but not yet verified on a native
   Windows host** — everything here has been tested from WSL against a
   Windows-side Blender install. If you hit a platform-specific issue

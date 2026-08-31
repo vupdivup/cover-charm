@@ -28,6 +28,7 @@ class RenderResult:
     gif: Path
     frames: list[Path]
     fps: float
+    preview: Path | None = None
 
 
 def render_gif(
@@ -40,6 +41,7 @@ def render_gif(
     keep_frames: bool = False,
     blender: str | Path | None = None,
     preview: bool = False,
+    preview_output: str | Path | None = None,
 ) -> RenderResult:
     """Render ``blend``'s animation with ``image`` swapped into ``material``'s image texture node, and assemble the frames into a GIF at ``fps``.
 
@@ -56,6 +58,12 @@ def render_gif(
     single-frame GIF. Blender still renders its full authored frame range
     -- trimming that in ``_script.py`` is fragile -- so this just drops
     every frame after the first once rendering is done.
+
+    ``preview_output``, if given, additionally writes a single-frame GIF
+    there -- a static preview alongside the animated one. It reuses the
+    same rendered frames, so it costs no extra Blender time. Unlike
+    ``preview``, it doesn't change what ``output`` contains; the two can
+    be combined but that renders the same first frame to both paths.
     """
     blend = Path(blend)
     output = Path(output) if output is not None else Path(f"{blend.stem}.gif")
@@ -73,6 +81,10 @@ def render_gif(
             frames = frames[:1]
         write_gif(frames, output, fps=fps)
 
+        preview_path = Path(preview_output) if preview_output is not None else None
+        if preview_path is not None:
+            write_gif(frames[:1], preview_path, fps=fps)
+
         if keep_frames:
             kept_dir = Path(f"{output.stem}_frames")
             kept_dir.mkdir(parents=True, exist_ok=True)
@@ -85,4 +97,4 @@ def render_gif(
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
 
-    return RenderResult(gif=output, frames=frames, fps=fps)
+    return RenderResult(gif=output, frames=frames, fps=fps, preview=preview_path)
