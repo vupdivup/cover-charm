@@ -120,16 +120,20 @@ There's only one channel today (`assets-dev`) -- no PR, no review, no
 tags; a reviewed/tagged "prod" channel is a natural later addition
 once there's a production site whose releases need pinning.
 
-A future `site/` showcase page is expected to hold one `BASE`
-constant, fetch `${BASE}/manifest.json`, and render
-`${BASE}/${album.gif}`:
+`site/` (repo root) is that showcase page: one `BASE` constant in
+`site/app.js`, media rendered as `${BASE}/${album.gif}` /
+`${BASE}/${album.preview}`:
 
 ```js
 BASE = 'https://cdn.jsdelivr.net/gh/vupdivup/cover-charm@assets-dev'
 ```
 
 jsDelivr sends `Access-Control-Allow-Origin: *`, so a `localhost` site
-can fetch this with no proxy.
+can fetch this with no proxy. `site/` reads `manifest.json` from a
+checked-in local copy (`site/data/manifest.json`) rather than fetching
+it from jsDelivr, since publishing that copy from `publish_assets` is
+not wired up yet — see `site/README.md` for the manual refresh
+command.
 
 **Python API:**
 

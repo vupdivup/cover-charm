@@ -21,9 +21,13 @@ This is a `uv` workspace with two packages:
 - `album-store` (`packages/album-store/`) fetches a cover via
   `album-covers` and persists it: image to MinIO/S3, metadata + object
   URL to Postgres. It can also `publish` rendered GIFs by force-pushing
-  them to the `assets-dev` git branch, served over jsDelivr for a
-  future showcase site. See
+  them to the `assets-dev` git branch, served over jsDelivr for the
+  `site/` showcase. See
   `packages/album-store/src/album_store/README.md` for full usage.
+- `site/` is a static, no-build showcase page (plain HTML/CSS/JS, not
+  a `uv` workspace member) that browses `assets-dev` GIFs from a
+  checked-in copy of the manifest at `site/data/manifest.json`. See
+  `site/README.md`.
 
 `album-covers` and `render` are `uv` workspace members under
 `packages/`, each with its own `pyproject.toml`. The root

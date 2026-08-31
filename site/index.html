@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cover Charm</title>
+  <meta name="description" content="Browse rendered album cover animations and copy an embeddable snippet." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__title">
+      <h1>Cover Charm</h1>
+      <p id="count" class="muted">Loading…</p>
+    </div>
+    <div class="search">
+      <svg class="search__icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/>
+      </svg>
+      <input
+        id="search"
+        type="search"
+        placeholder="Search artist or title…"
+        autocomplete="off"
+        aria-label="Search albums"
+      />
+    </div>
+  </header>
+
+  <main>
+    <p id="empty" hidden>No albums match your search.</p>
+    <div id="grid" class="grid" aria-live="polite"></div>
+  </main>
+
+  <dialog id="detail" class="detail">
+    <form method="dialog" class="detail__close-form">
+      <button type="submit" class="detail__close" aria-label="Close">&times;</button>
+    </form>
+    <div class="detail__media">
+      <img id="detail-img" alt="" />
+    </div>
+    <div class="detail__body">
+      <h2 id="detail-title"></h2>
+      <p id="detail-sub" class="muted"></p>
+
+      <div class="snippet">
+        <div class="snippet__tabs" role="tablist" aria-label="Snippet format">
+          <button type="button" role="tab" data-format="markdown" aria-selected="true">Markdown</button>
+          <button type="button" role="tab" data-format="html" aria-selected="false">HTML</button>
+          <button type="button" role="tab" data-format="url" aria-selected="false">URL</button>
+        </div>
+        <div class="snippet__panel">
+          <pre id="snippet-code"></pre>
+          <button id="snippet-copy" type="button" class="copy-btn">Copy</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
