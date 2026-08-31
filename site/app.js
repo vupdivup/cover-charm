@@ -20,6 +20,7 @@ const snippetTabs = document.querySelectorAll(".snippet__tabs button");
 const themeToggle = document.getElementById("theme-toggle");
 const yearEl = document.getElementById("year");
 const manifestDateEl = document.getElementById("manifest-date");
+const intro = document.getElementById("intro");
 
 // Cap how many cards keep an animated GIF loaded at once; older
 // hovers revert to their static preview so 500 items can't pin
@@ -31,6 +32,7 @@ let currentAlbum = null;
 let currentFormat = "markdown";
 
 wireThemeToggle();
+wireIntro();
 yearEl.textContent = new Date().getFullYear();
 init();
 
@@ -41,6 +43,19 @@ function wireThemeToggle() {
     document.documentElement.style.colorScheme = next;
     localStorage.setItem("theme", next);
   });
+}
+
+function wireIntro() {
+  intro.addEventListener("click", (event) => {
+    if (event.target === intro) intro.close();
+  });
+  intro.addEventListener("close", () => {
+    localStorage.setItem("introSeen", "1");
+  });
+
+  if (!localStorage.getItem("introSeen")) {
+    intro.showModal();
+  }
 }
 
 async function init() {
