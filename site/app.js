@@ -17,6 +17,9 @@ const detailSub = document.getElementById("detail-sub");
 const snippetCode = document.getElementById("snippet-code");
 const snippetCopy = document.getElementById("snippet-copy");
 const snippetTabs = document.querySelectorAll(".snippet__tabs button");
+const themeToggle = document.getElementById("theme-toggle");
+const yearEl = document.getElementById("year");
+const manifestDateEl = document.getElementById("manifest-date");
 
 // Cap how many cards keep an animated GIF loaded at once; older
 // hovers revert to their static preview so 500 items can't pin
@@ -27,7 +30,18 @@ const hotCards = [];
 let currentAlbum = null;
 let currentFormat = "markdown";
 
+wireThemeToggle();
+yearEl.textContent = new Date().getFullYear();
 init();
+
+function wireThemeToggle() {
+  themeToggle.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    document.documentElement.style.colorScheme = next;
+    localStorage.setItem("theme", next);
+  });
+}
 
 async function init() {
   let albums = [];
@@ -36,6 +50,14 @@ async function init() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const manifest = await res.json();
     albums = manifest.albums ?? [];
+    if (manifest.generated_at) {
+      const date = new Date(manifest.generated_at);
+      manifestDateEl.textContent = `Data as of ${date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })}.`;
+    }
   } catch (err) {
     countEl.textContent = "Failed to load manifest.";
     console.error("manifest load failed", err);

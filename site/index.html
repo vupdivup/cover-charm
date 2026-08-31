@@ -9,6 +9,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script>
+    // Runs before paint so the stored/system theme applies with no flash.
+    (function () {
+      var stored = localStorage.getItem("theme");
+      var theme = stored === "light" || stored === "dark"
+        ? stored
+        : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
 </head>
 <body>
   <header class="site-header">
@@ -28,8 +39,21 @@
         aria-label="Search albums"
       />
     </div>
+    <button
+      id="theme-toggle"
+      class="icon-btn"
+      type="button"
+      aria-label="Toggle dark mode"
+    >
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path fill="currentColor" d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10m0-15a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1m0 18a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1M4.22 4.22a1 1 0 0 1 1.42 0l.7.7a1 1 0 1 1-1.42 1.42l-.7-.7a1 1 0 0 1 0-1.42m13.44 13.44a1 1 0 0 1 1.42 0l.7.7a1 1 0 0 1-1.42 1.42l-.7-.7a1 1 0 0 1 0-1.42M1 12a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2H2a1 1 0 0 1-1-1m18 0a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2h-1a1 1 0 0 1-1-1M4.22 19.78a1 1 0 0 1 0-1.42l.7-.7a1 1 0 1 1 1.42 1.42l-.7.7a1 1 0 0 1-1.42 0M17.66 6.34a1 1 0 0 1 0-1.42l.7-.7a1 1 0 1 1 1.42 1.42l-.7.7a1 1 0 0 1-1.42 0"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path fill="currentColor" d="M20.742 13.045a8.088 8.088 0 0 1-2.077.271c-4.492 0-8.131-3.639-8.131-8.131 0-1.386.348-2.69.96-3.831a10.05 10.05 0 0 0-8.842 9.968c0 5.554 4.502 10.056 10.056 10.056 4.85 0 8.901-3.435 9.847-8.005a8.006 8.006 0 0 1-1.813-.328"/>
+      </svg>
+    </button>
     <a
-      class="gh-link"
+      class="icon-btn gh-link"
       href="https://github.com/vupdivup/cover-charm"
       target="_blank"
       rel="noopener noreferrer"
@@ -70,6 +94,19 @@
       </div>
     </div>
   </dialog>
+
+  <footer class="site-footer">
+    <p>
+      &copy; <span id="year"></span>
+      <a href="https://github.com/vupdivup" target="_blank" rel="noopener noreferrer">vupdivup</a>.
+      Source on <a href="https://github.com/vupdivup/cover-charm" target="_blank" rel="noopener noreferrer">GitHub</a>.
+    </p>
+    <p>
+      Images served via <a href="https://www.jsdelivr.com/" target="_blank" rel="noopener noreferrer">jsDelivr</a>
+      from the <code>assets-dev</code> branch.
+      <span id="manifest-date"></span>
+    </p>
+  </footer>
 
   <script type="module" src="app.js"></script>
 </body>

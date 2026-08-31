@@ -78,27 +78,43 @@ body {
   pointer-events: none;
 }
 
-.gh-link {
+.icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 999px;
+  border: none;
+  background: none;
   color: var(--fg-muted);
   flex-shrink: 0;
+  cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.gh-link:hover,
-.gh-link:focus-visible {
+.icon-btn:hover,
+.icon-btn:focus-visible {
   color: var(--fg);
   background: var(--border);
 }
 
-.gh-link:focus-visible {
+.icon-btn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Show sun in dark mode (click to go light), moon in light/system mode. */
+#theme-toggle .icon-sun {
+  display: none;
+}
+
+html[data-theme="dark"] #theme-toggle .icon-sun {
+  display: block;
+}
+
+html[data-theme="dark"] #theme-toggle .icon-moon {
+  display: none;
 }
 
 .search input {
@@ -129,6 +145,34 @@ main {
   padding: 1.5rem clamp(1rem, 4vw, 3rem) 4rem;
 }
 
+.site-footer {
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 2.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.site-footer p {
+  margin: 0.3rem 0;
+}
+
+.site-footer a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.site-footer a:hover,
+.site-footer a:focus-visible {
+  color: var(--fg);
+}
+
+.site-footer code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78em;
+}
+
 #empty {
   text-align: center;
   color: var(--fg-muted);
@@ -139,6 +183,16 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 1.1rem;
+}
+
+@media (max-width: 480px) {
+  .grid {
+    /* A single 190px min-width track stretches to fill the whole
+       narrow viewport, blowing up card art. Force a smaller floor so
+       two columns fit instead of one oversized one. */
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.8rem;
+  }
 }
 
 .card {
@@ -293,7 +347,7 @@ main {
 
 .detail__media {
   aspect-ratio: 16 / 9;
-  background: #000;
+  background: var(--bg);
 }
 
 .detail__media img {
@@ -389,9 +443,18 @@ main {
 
 @media (max-width: 480px) {
   .detail {
-    width: 100vw;
-    max-height: 100vh;
-    height: 100vh;
-    border-radius: 0;
+    /* Shrink to content instead of forcing full-screen height — the
+       square/16:9 media plus a couple lines of text rarely needs the
+       whole viewport, and a forced height left a large empty gap.
+       Keep the 92vw width from the base rule so rounded corners have
+       margin to show against, rather than going edge-to-edge. */
+    max-height: 100dvh;
+  }
+
+  .detail__media {
+    /* 16:9 at full viewport width leaves less room for the body on a
+       short phone screen; go squarer so the sheet doesn't feel like
+       it's mostly empty media. */
+    aspect-ratio: 4 / 3;
   }
 }
