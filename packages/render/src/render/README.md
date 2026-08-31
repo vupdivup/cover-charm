@@ -51,7 +51,8 @@ mismatch, the error lists every node-enabled material name the
 `.blend` actually has), `-o/--output` (default: `<blend stem>.gif`),
 `--fps` (default 24), `--keep-frames` (keep the rendered PNGs in
 `<output stem>_frames/` instead of discarding them), `--blender` (path
-to the executable, overriding auto-detection).
+to the executable, overriding auto-detection), `--preview` (write only
+the first frame as a single-frame GIF).
 
 Prints the frame count to stderr and the GIF path alone to stdout.
 
@@ -62,6 +63,9 @@ from render import render_gif
 
 result = render_gif("scene.blend", "cover.jpg", material="CoverMaterial", fps=12)
 print(result.gif, len(result.frames), result.fps)
+
+# preview=True keeps only the first rendered frame
+still = render_gif("scene.blend", "cover.jpg", material="CoverMaterial", preview=True)
 ```
 
 Exports: `render_gif`, `RenderResult`, `BlenderError`, `find_blender`,
@@ -80,6 +84,10 @@ Exports: `render_gif`, `RenderResult`, `BlenderError`, `find_blender`,
   adaptive palette selection, and alpha is preserved as binary
   transparency (thresholded at 128) -- no partial/anti-aliased
   transparency, since GIF has no true alpha channel.
+- `--preview` doesn't shorten the Blender render itself — the full
+  authored frame range is always rendered, and everything after the
+  first frame is dropped afterward. Narrowing the frame range inside
+  `_script.py` would be fragile, so this is deliberate.
 - **Windows support is implemented but not yet verified on a native
   Windows host** — everything here has been tested from WSL against a
   Windows-side Blender install. If you hit a platform-specific issue
