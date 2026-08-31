@@ -39,6 +39,7 @@ def render_gif(
     fps: float = 24.0,
     keep_frames: bool = False,
     blender: str | Path | None = None,
+    preview: bool = False,
 ) -> RenderResult:
     """Render ``blend``'s animation with ``image`` swapped into ``material``'s image texture node, and assemble the frames into a GIF at ``fps``.
 
@@ -50,6 +51,11 @@ def render_gif(
     ``<blend stem>.gif`` in the current directory. Frames are discarded
     after assembly unless ``keep_frames`` is set, in which case they're
     left in ``<output stem>_frames/`` next to the GIF.
+
+    ``preview``, if set, keeps only the first rendered frame and writes a
+    single-frame GIF. Blender still renders its full authored frame range
+    -- trimming that in ``_script.py`` is fragile -- so this just drops
+    every frame after the first once rendering is done.
     """
     blend = Path(blend)
     output = Path(output) if output is not None else Path(f"{blend.stem}.gif")
@@ -63,6 +69,8 @@ def render_gif(
         frames = render_frames(
             scratch_blend, image, material=material, out_dir=frame_dir, blender=blender
         )
+        if preview:
+            frames = frames[:1]
         write_gif(frames, output, fps=fps)
 
         if keep_frames:

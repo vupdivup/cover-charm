@@ -18,12 +18,16 @@ def _cmd_render(args: argparse.Namespace) -> int:
             fps=args.fps,
             keep_frames=args.keep_frames,
             blender=args.blender,
+            preview=args.preview,
         )
     except (BlenderError, GifError, ValueError, OSError) as exc:
         print(str(exc), file=sys.stderr)
         return 1
 
-    print(f"{len(result.frames)} frames at {result.fps} fps", file=sys.stderr)
+    if args.preview:
+        print("1 frame (preview)", file=sys.stderr)
+    else:
+        print(f"{len(result.frames)} frames at {result.fps} fps", file=sys.stderr)
     print(result.gif)
     return 0
 
@@ -39,6 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--fps", type=float, default=24.0, help="GIF frame rate (default: 24)")
     parser.add_argument("--keep-frames", action="store_true", help="keep the rendered PNG frames next to the GIF")
     parser.add_argument("--blender", default=None, help="path to the Blender executable (default: auto-detected)")
+    parser.add_argument("--preview", action="store_true", help="write only the first frame as a single-frame GIF")
     parser.set_defaults(func=_cmd_render)
     return parser
 
