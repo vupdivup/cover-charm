@@ -214,6 +214,12 @@ function wireDialog() {
   }
 
   snippetCopy.addEventListener("click", copySnippet);
+
+  // Native <dialog> only closes on backdrop click if the click target
+  // is the dialog element itself (i.e. outside its content box).
+  detail.addEventListener("click", (event) => {
+    if (event.target === detail) detail.close();
+  });
 }
 
 function openDetail(album, gifUrl) {
