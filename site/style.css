@@ -276,7 +276,7 @@ main {
 /* ---------- dialog ---------- */
 
 .detail {
-  border: none;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 0;
   width: min(640px, 92vw);
@@ -304,7 +304,7 @@ main {
 }
 
 .detail::backdrop {
-  background: rgb(0 0 0 / 0.45);
+  background: rgb(0 0 0 / 0.6);
   backdrop-filter: blur(4px);
   opacity: 0;
   transition: opacity 0.18s ease;
