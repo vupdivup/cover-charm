@@ -56,6 +56,9 @@
         <path d="M18 6 6 18"/>
         <path d="m6 6 12 12"/>
       </symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6 9 17l-5-5"/>
+      </symbol>
     </defs>
   </svg>
 
@@ -148,7 +151,10 @@
         </div>
         <div class="snippet__panel">
           <pre id="snippet-code"></pre>
-          <button id="snippet-copy" type="button" class="copy-btn">Copy</button>
+          <button id="snippet-copy" type="button" class="copy-btn icon-btn" aria-label="Copy snippet">
+            <svg class="icon-copy icon" width="16" height="16" aria-hidden="true"><use href="#icon-copy"/></svg>
+            <svg class="icon-check icon" width="16" height="16" aria-hidden="true"><use href="#icon-check"/></svg>
+          </button>
         </div>
       </div>
     </div>

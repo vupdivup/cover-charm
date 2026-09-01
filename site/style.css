@@ -134,9 +134,9 @@ body {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: var(--radius);
-  border: none;
-  background: none;
-  color: var(--fg-muted);
+  border: var(--border-width) solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--fg);
   flex-shrink: 0;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
@@ -144,8 +144,8 @@ body {
 
 .icon-btn:hover,
 .icon-btn:focus-visible {
-  color: var(--fg);
-  background: var(--border);
+  color: var(--accent-fg);
+  background: var(--accent);
 }
 
 .icon-btn:focus-visible {
@@ -332,7 +332,7 @@ main {
 /* ---------- dialog ---------- */
 
 .detail {
-  border: var(--border-width) solid var(--border);
+  border: none;
   border-radius: var(--radius);
   padding: 0;
   width: min(640px, 92vw);
@@ -467,7 +467,8 @@ main {
 
 .detail__media {
   aspect-ratio: 16 / 9;
-  background: var(--bg);
+  background: var(--bg) radial-gradient(circle, color-mix(in srgb, var(--fg) 5%, transparent) 1.4px, transparent 1.4px);
+  background-size: 10px 10px;
 }
 
 .detail__media img {
@@ -501,6 +502,8 @@ main {
 }
 
 .snippet__tabs button {
+  flex: 0 0 auto;
+  width: 6.5rem;
   appearance: none;
   border: var(--border-width) solid var(--border);
   background: transparent;
@@ -509,6 +512,7 @@ main {
   border-radius: var(--radius);
   font: inherit;
   font-size: 0.8rem;
+  text-align: center;
   cursor: pointer;
 }
 
@@ -533,7 +537,7 @@ main {
   margin: 0;
   flex: 1;
   overflow-x: auto;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font);
   font-size: 0.8rem;
   white-space: pre;
 }
@@ -541,20 +545,18 @@ main {
 .copy-btn {
   flex-shrink: 0;
   align-self: center;
-  appearance: none;
-  border: var(--border-width) solid var(--border);
-  background: var(--bg-elevated);
-  color: var(--fg);
-  padding: 0.4rem 0.8rem;
-  border-radius: var(--radius);
-  font: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: background 0.15s ease;
 }
 
-.copy-btn:hover {
-  background: var(--border);
+.copy-btn .icon-check {
+  display: none;
+}
+
+.copy-btn.copied .icon-copy {
+  display: none;
+}
+
+.copy-btn.copied .icon-check {
+  display: block;
 }
 
 .copy-btn.copied {

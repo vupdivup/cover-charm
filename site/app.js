@@ -279,10 +279,10 @@ async function copySnippet() {
     textarea.remove();
   }
 
-  snippetCopy.textContent = "Copied";
+  snippetCopy.setAttribute("aria-label", "Copied");
   snippetCopy.classList.add("copied");
   setTimeout(() => {
-    snippetCopy.textContent = "Copy";
+    snippetCopy.setAttribute("aria-label", "Copy snippet");
     snippetCopy.classList.remove("copied");
   }, 1200);
 }
