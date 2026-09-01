@@ -333,7 +333,6 @@ main {
 /* ---------- dialog ---------- */
 
 .detail {
-  display: flex;
   flex-direction: column;
   border: none;
   border-radius: var(--radius);
@@ -351,6 +350,7 @@ main {
 }
 
 .detail[open] {
+  display: flex;
   opacity: 1;
   transform: translateY(0) scale(1);
 }
