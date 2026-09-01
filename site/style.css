@@ -44,7 +44,7 @@ body {
    transparent and a thick inset outline takes over, so focus never
    nudges layout (outline sits outside the box model) or doubles up
    with a control's own border. */
-:is(.icon-btn, .search input, .card, .detail__close, .snippet__tabs button, .copy-btn):focus-visible {
+:is(.icon-btn, .search input, .card, .detail__close, .snippet__tabs button, .copy-btn, .site-footer a, .detail__body, .snippet__panel pre):focus-visible {
   border-color: transparent;
   outline: 2px solid var(--border);
   outline-offset: -2px;
@@ -128,9 +128,21 @@ body {
 
 .search__icon {
   position: absolute;
-  left: 0.75rem;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--fg-muted);
   pointer-events: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.search:has(input:focus-visible) .search__icon {
+  background: var(--accent);
+  color: var(--accent-fg);
 }
 
 .header-actions {
@@ -175,7 +187,7 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
 
 .search input {
   width: 100%;
-  padding: 0.6rem 0.75rem 0.6rem 2.25rem;
+  padding: 0.6rem 0.75rem 0.6rem 3.25rem;
   border-radius: var(--radius);
   border: var(--border-width) solid var(--border);
   background: var(--bg-elevated);
@@ -186,6 +198,13 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
 
 .search input::-webkit-search-cancel-button {
   cursor: pointer;
+}
+
+.search input:focus-visible {
+  /* Flush (not inset) so the outline lines up exactly with the icon
+     box's own flush edges instead of sitting 2px inside them —
+     otherwise the two read as disconnected rectangles. */
+  outline-offset: 0;
 }
 
 /* ---------- grid ---------- */
@@ -235,6 +254,12 @@ main {
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: var(--grid-gap);
   overflow: hidden;
+  /* Top row's hover/focus lift (translateY(-3px)) plus its outline
+     poke above the grid's own box, which this overflow:hidden then
+     clips. Pad + negative margin gives the lift room without moving
+     the grid's visible position. */
+  padding-top: 4px;
+  margin-top: -4px;
 }
 
 @media (max-width: 480px) {
@@ -467,6 +492,7 @@ main {
   aspect-ratio: 16 / 9;
   background: var(--bg) radial-gradient(circle, color-mix(in srgb, var(--fg) 5%, transparent) 1.4px, transparent 1.4px);
   background-size: 10px 10px;
+  border-bottom: var(--border-width) solid var(--border);
 }
 
 .detail__media img {
