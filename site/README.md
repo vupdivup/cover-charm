@@ -8,36 +8,36 @@ an ES module straight from jsDelivr.
 ## Run
 
 ```
-python -m http.server 8000 -d site
+wubwub studio serve            # prod assets, exactly what visitors see
+wubwub studio serve --dev      # push current assets to assets-dev, then serve them
 ```
 
-Open `http://localhost:8000`. Must be served over HTTP(S) — `app.js`
-is an ES module and fetches `data/manifest.json`, both of which are
-blocked under `file://`.
+Both print the URL to open (`--dev` adds `?channel=dev`). Plain
+`python -m http.server 8000 -d site` works too — the page is fully
+static — but must be served over HTTP(S), since `app.js` is an ES
+module and fetches the manifest, both blocked under `file://`.
 
 ## Data
 
-- `data/manifest.json` — a checked-in **copy** of the manifest
-  published to the `assets-dev` branch by `wubwub studio publish`. It is
-  refreshed by hand for now:
+Nothing is checked in: the page fetches everything from jsDelivr at
+runtime.
 
-  ```
-  git show origin/assets-dev:manifest.json > site/data/manifest.json
-  ```
+- **Channel** — `?channel=dev` selects the force-pushed `assets-dev`
+  branch; anything else (i.e. the default) selects the reviewed prod
+  `assets` branch. A `dev assets` badge shows in the header on the dev
+  channel so it can't be mistaken for prod.
 
-  Automating this copy as part of `publish` is a known follow-up, not
-  yet implemented.
+- **Manifest** — fetched from the channel branch,
+  `https://cdn.jsdelivr.net/gh/vupdivup/wubwub@<branch>/manifest.json`.
+  This is the only path served off a moving branch ref, so it's the only
+  one anything ever purges. A merged release therefore updates the live
+  album list with no commit here.
 
-- GIFs (`gif`, animated; `preview`, static first frame) are **not**
-  copied locally — the page fetches them straight from jsDelivr via
-  the `BASE` constant at the top of `app.js`:
-
-  ```js
-  const BASE = "https://cdn.jsdelivr.net/gh/vupdivup/wubwub@assets-dev";
-  ```
-
-  Update `BASE` if/when a reviewed "prod" `assets` channel replaces
-  `assets-dev` for this site.
+- **Media** (`gif`, animated; `preview`, static first frame) — resolved
+  against `manifest.version` when the manifest carries one, i.e. the
+  immutable `assets-vN` tag that release was published as; dev manifests
+  have no version and stay on the branch. That's what makes the copied
+  embed snippets permanent.
 
 ## Behavior notes
 

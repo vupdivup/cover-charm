@@ -1,0 +1,52 @@
+# Tags a merged prod asset release and busts the one cache entry that
+# can go stale. `wubwub studio deploy` picks the version and writes it
+# into manifest.json before review, so this job only has to create the
+# tag that manifest already names -- media URLs on the site point at
+# that tag, never at the branch.
+name: tag-assets
+
+on:
+  push:
+    branches: [assets]
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Read the version out of the manifest
+        id: manifest
+        run: |
+          version=$(jq -r '.version // empty' manifest.json)
+          if [ -z "$version" ]; then
+            echo "manifest.json has no .version -- was this pushed by \`wubwub studio deploy\`?" >&2
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/$version" >/dev/null; then
+            echo "tag $version already exists; assets tags are immutable, re-cut the release" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Tag the release
+        env:
+          VERSION: ${{ steps.manifest.outputs.version }}
+        run: |
+          git -c user.name=wubwub -c user.email=wubwub@localhost \
+            tag -a "$VERSION" -m "Assets $VERSION"
+          git push origin "$VERSION"
+
+      # Only manifest.json is served off the moving branch ref, which
+      # jsDelivr caches for up to 12h; everything else is tag-pinned and
+      # immutable. Best-effort -- a failed purge just delays the site
+      # seeing the new list.
+      - name: Purge the manifest from jsDelivr
+        continue-on-error: true
+        run: |
+          curl -fsS "https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@assets/manifest.json"

@@ -5,7 +5,9 @@ import logging
 from .batch import RenderOutcome, render_albums
 from .config import Settings
 from .db import StoredAlbum
+from .deploy import DeployResult, deploy_assets
 from .publish import PublishResult, publish_assets
+from .serve import serve_site
 from .upload import upload_album
 
 __all__ = [
@@ -16,6 +18,9 @@ __all__ = [
     "render_albums",
     "PublishResult",
     "publish_assets",
+    "DeployResult",
+    "deploy_assets",
+    "serve_site",
 ]
 
 # Library convention: emit records but stay silent unless a host app
