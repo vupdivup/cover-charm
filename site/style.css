@@ -10,7 +10,7 @@
   --accent-fg: light-dark(#ffffff, #18181b);
   --shadow: light-dark(0 8px 24px -12px rgb(0 0 0 / 0.25), 0 8px 24px -12px rgb(0 0 0 / 0.6));
   --shadow-lg: light-dark(0 24px 60px -20px rgb(0 0 0 / 0.35), 0 24px 60px -20px rgb(0 0 0 / 0.8));
-  --border-width: 2px;
+  --border-width: 1px;
   --radius: 0px;
   --font: "Fragment Mono", ui-monospace, "Courier New", monospace;
   --font-display: "Clash Display", var(--font);
