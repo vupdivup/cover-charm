@@ -29,6 +29,8 @@ const hotCards = [];
 
 let currentAlbum = null;
 let currentFormat = "markdown";
+let openerCard = null;
+let openerDeactivate = null;
 
 wireThemeToggle();
 wireIntro();
@@ -155,9 +157,14 @@ function buildCard(album) {
 
   card.addEventListener("pointerenter", activate);
   card.addEventListener("pointerleave", deactivate);
-  card.addEventListener("focus", activate);
+  // Only keyboard focus animates: closing the dialog restores focus to
+  // the card that opened it, which otherwise left that card playing
+  // with the pointer somewhere else entirely.
+  card.addEventListener("focus", () => {
+    if (card.matches(":focus-visible")) activate();
+  });
   card.addEventListener("blur", deactivate);
-  card.addEventListener("click", () => openDetail(album, gifUrl));
+  card.addEventListener("click", () => openDetail(album, gifUrl, card, deactivate));
 
   return card;
 }
@@ -220,6 +227,15 @@ function wireDialog() {
 
   snippetCopy.addEventListener("click", copySnippet);
 
+  // The card that opened the dialog never sees `pointerleave` while the
+  // modal covers it, so stop its GIF on close unless the pointer really
+  // did come to rest on it.
+  detail.addEventListener("close", () => {
+    if (openerCard && !openerCard.matches(":hover")) openerDeactivate();
+    openerCard = null;
+    openerDeactivate = null;
+  });
+
   // Native <dialog> only closes on backdrop click if the click target
   // is the dialog element itself (i.e. outside its content box).
   detail.addEventListener("click", (event) => {
@@ -227,8 +243,10 @@ function wireDialog() {
   });
 }
 
-function openDetail(album, gifUrl) {
+function openDetail(album, gifUrl, card, deactivate) {
   currentAlbum = { ...album, gifUrl };
+  openerCard = card;
+  openerDeactivate = deactivate;
 
   detailImg.src = gifUrl;
   detailImg.alt = `${album.artist} — ${album.title}`;
