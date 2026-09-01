@@ -532,7 +532,7 @@ main {
 .snippet__panel {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 0.5rem;
   border-left: 3px solid var(--accent);
   border-radius: var(--radius);
@@ -544,10 +544,10 @@ main {
   margin: 0;
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
   font-family: var(--font);
   font-size: 0.8rem;
-  white-space: pre-wrap;
-  word-break: break-all;
+  white-space: pre;
 }
 
 .copy-btn {
