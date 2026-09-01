@@ -49,6 +49,8 @@ def _render_one(
     material: str,
     fps: float,
     blender: str | Path | None,
+    colors: int,
+    dither: bool,
 ) -> RenderOutcome:
     with tempfile.TemporaryDirectory(prefix="wubwub-studio-render-") as tmp:
         tmp_dir = Path(tmp)
@@ -69,6 +71,8 @@ def _render_one(
             preview_output=preview_path,
             fps=fps,
             blender=blender,
+            colors=colors,
+            dither=dither,
         )
         gif_data = result.gif.read_bytes()
         preview_data = result.preview.read_bytes()
@@ -113,6 +117,8 @@ def render_albums(
     fps: float = 24.0,
     limit: int | None = None,
     blender: str | Path | None = None,
+    colors: int = 128,
+    dither: bool = False,
     settings: Settings | None = None,
 ) -> tuple[list[RenderOutcome], int]:
     """Render GIFs for stored albums missing one (or every album if all=True).
@@ -143,6 +149,8 @@ def render_albums(
                         material=material,
                         fps=fps,
                         blender=blender,
+                        colors=colors,
+                        dither=dither,
                     )
                 )
             except _RENDER_ERRORS as exc:

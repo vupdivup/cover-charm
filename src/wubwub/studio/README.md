@@ -83,7 +83,9 @@ default or env var -- neither the `.blend` file nor the material name
 to swap is something this package can discover on its own. Other flags:
 `--fps` (default 24.0), `--limit N` (cap albums per run), `--blender`
 (explicit Blender executable path, otherwise auto-detected the same way
-[`wubwub.media`](../media) does). One album failing (bad material name,
+[`wubwub.media`](../media) does), `--colors` (GIF palette size, default
+128 -- lower is smaller) and `--dither` (dither the palette mapping;
+off by default). One album failing (bad material name,
 missing cover object, a Blender error) is logged and skipped rather
 than aborting the run; the command prints each rendered GIF's URL to
 stdout and exits 1 if any album failed (the preview URL is logged, not

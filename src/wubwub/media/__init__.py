@@ -42,6 +42,8 @@ def render_gif(
     blender: str | Path | None = None,
     preview: bool = False,
     preview_output: str | Path | None = None,
+    colors: int = 128,
+    dither: bool = False,
 ) -> RenderResult:
     """Render ``blend``'s animation with ``image`` swapped into ``material``'s image texture node, and assemble the frames into a GIF at ``fps``.
 
@@ -64,6 +66,10 @@ def render_gif(
     same rendered frames, so it costs no extra Blender time. Unlike
     ``preview``, it doesn't change what ``output`` contains; the two can
     be combined but that renders the same first frame to both paths.
+
+    ``colors`` and ``dither`` are forwarded to ``write_gif`` for both
+    the main output and ``preview_output``, so a preview uses the same
+    palette settings as the animated GIF.
     """
     blend = Path(blend)
     output = Path(output) if output is not None else Path(f"{blend.stem}.gif")
@@ -79,11 +85,11 @@ def render_gif(
         )
         if preview:
             frames = frames[:1]
-        write_gif(frames, output, fps=fps)
+        write_gif(frames, output, fps=fps, colors=colors, dither=dither)
 
         preview_path = Path(preview_output) if preview_output is not None else None
         if preview_path is not None:
-            write_gif(frames[:1], preview_path, fps=fps)
+            write_gif(frames[:1], preview_path, fps=fps, colors=colors, dither=dither)
 
         if keep_frames:
             kept_dir = Path(f"{output.stem}_frames")
