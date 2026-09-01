@@ -47,7 +47,10 @@ mismatch, the error lists every node-enabled material name the
 `<output stem>_frames/` instead of discarding them), `--blender` (path
 to the executable, overriding auto-detection), `--preview` (write only
 the first frame as a single-frame GIF), `--preview-output` (also write a
-single-frame preview GIF to this path, alongside the normal output).
+single-frame preview GIF to this path, alongside the normal output),
+`--colors` (GIF palette size, default 128 -- lower is smaller),
+`--dither` (dither the palette mapping; off by default, since it makes
+the file larger for a gain rarely visible at these sizes).
 
 Prints the frame count to stderr and the GIF path alone to stdout.
 
@@ -81,10 +84,14 @@ Exports: `render_gif`, `RenderResult`, `BlenderError`, `find_blender`,
   listing the node names, rather than guessing which one you meant.
 - If the target image is packed into the `.blend`, it's unpacked
   before the swap (a packed image otherwise ignores a new file path).
-- GIF is a 256-colour paletted format: frames are quantized with
-  adaptive palette selection, and alpha is preserved as binary
-  transparency (thresholded at 128) -- no partial/anti-aliased
-  transparency, since GIF has no true alpha channel.
+- GIF is a 256-colour paletted format: all frames share one adaptive
+  palette (`--colors`, default 128, leaving room for a reserved
+  transparency index) built from a sample of the frames, rather than
+  each frame getting its own locally adaptive palette -- a per-frame
+  palette is the dominant size cost in a naively-encoded GIF. Alpha is
+  preserved as binary transparency (thresholded at 128) -- no
+  partial/anti-aliased transparency, since GIF has no true alpha
+  channel.
 - `--preview` doesn't shorten the Blender render itself — the full
   authored frame range is always rendered, and everything after the
   first frame is dropped afterward. Narrowing the frame range inside

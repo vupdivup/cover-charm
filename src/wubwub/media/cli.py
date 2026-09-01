@@ -20,6 +20,8 @@ def _cmd_render(args: argparse.Namespace) -> int:
             blender=args.blender,
             preview=args.preview,
             preview_output=args.preview_output,
+            colors=args.colors,
+            dither=args.dither,
         )
     except (BlenderError, GifError, ValueError, OSError) as exc:
         print(str(exc), file=sys.stderr)
@@ -58,4 +60,8 @@ def register(sub: argparse._SubParsersAction, logging_parent: argparse.ArgumentP
     render_p.add_argument("--blender", default=None, help="path to the Blender executable (default: auto-detected)")
     render_p.add_argument("--preview", action="store_true", help="write only the first frame as a single-frame GIF")
     render_p.add_argument("--preview-output", default=None, help="also write a single-frame preview GIF to this path")
+    render_p.add_argument("--colors", type=int, default=128, help="GIF palette size; lower is smaller (default: 128)")
+    render_p.add_argument(
+        "--dither", action="store_true", help="dither the palette mapping (larger file, smoother gradients)"
+    )
     render_p.set_defaults(func=_cmd_render)

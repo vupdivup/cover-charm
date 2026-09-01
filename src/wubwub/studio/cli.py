@@ -45,6 +45,8 @@ def _cmd_render(args: argparse.Namespace) -> int:
         fps=args.fps,
         limit=args.limit,
         blender=args.blender,
+        colors=args.colors,
+        dither=args.dither,
         settings=settings,
     )
     for outcome in outcomes:
@@ -115,6 +117,10 @@ def register(sub: argparse._SubParsersAction, logging_parent: argparse.ArgumentP
     render_p.add_argument("--fps", type=float, default=24.0, help="GIF frame rate (default: 24.0)")
     render_p.add_argument("--limit", type=int, default=None, help="render at most N albums")
     render_p.add_argument("--blender", default=None, help="path to the Blender executable")
+    render_p.add_argument("--colors", type=int, default=128, help="GIF palette size; lower is smaller (default: 128)")
+    render_p.add_argument(
+        "--dither", action="store_true", help="dither the palette mapping (larger file, smoother gradients)"
+    )
     render_p.set_defaults(func=_cmd_render)
 
     publish_p = studio_sub.add_parser(
