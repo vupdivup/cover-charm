@@ -97,6 +97,7 @@ body {
   .site-header {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
   }
 
   .site-header__title {
@@ -332,6 +333,8 @@ main {
 /* ---------- dialog ---------- */
 
 .detail {
+  display: flex;
+  flex-direction: column;
   border: none;
   border-radius: var(--radius);
   padding: 0;
@@ -451,21 +454,23 @@ main {
   align-items: center;
   justify-content: center;
   padding: 0;
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: var(--radius);
   border: none;
-  background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
+  background: none;
   color: var(--fg);
   cursor: pointer;
-  backdrop-filter: blur(4px);
+  transition: color 0.15s ease;
 }
 
-.detail__close:hover {
-  background: var(--border);
+.detail__close:hover,
+.detail__close:focus-visible {
+  color: var(--accent);
 }
 
 .detail__media {
+  flex-shrink: 0;
   aspect-ratio: 16 / 9;
   background: var(--bg) radial-gradient(circle, color-mix(in srgb, var(--fg) 5%, transparent) 1.4px, transparent 1.4px);
   background-size: 10px 10px;
@@ -479,6 +484,8 @@ main {
 }
 
 .detail__body {
+  flex: 1;
+  min-height: 0;
   padding: 1.25rem 1.5rem 1.5rem;
   overflow-y: auto;
 }
@@ -525,9 +532,9 @@ main {
 .snippet__panel {
   position: relative;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 0.5rem;
-  border: var(--border-width) solid var(--border);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius);
   background: var(--bg);
   padding: 0.7rem 0.8rem;
@@ -536,10 +543,11 @@ main {
 .snippet__panel pre {
   margin: 0;
   flex: 1;
-  overflow-x: auto;
+  min-width: 0;
   font-family: var(--font);
   font-size: 0.8rem;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .copy-btn {
