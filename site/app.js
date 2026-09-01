@@ -19,7 +19,6 @@ const snippetCopy = document.getElementById("snippet-copy");
 const snippetTabs = document.querySelectorAll(".snippet__tabs button");
 const themeToggle = document.getElementById("theme-toggle");
 const yearEl = document.getElementById("year");
-const manifestDateEl = document.getElementById("manifest-date");
 const intro = document.getElementById("intro");
 
 // Cap how many cards keep an animated GIF loaded at once; older
@@ -65,14 +64,6 @@ async function init() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const manifest = await res.json();
     albums = manifest.albums ?? [];
-    if (manifest.generated_at) {
-      const date = new Date(manifest.generated_at);
-      manifestDateEl.textContent = `Data as of ${date.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })}.`;
-    }
   } catch (err) {
     countEl.hidden = false;
     countEl.textContent = "Failed to load manifest.";
@@ -279,10 +270,10 @@ async function copySnippet() {
     textarea.remove();
   }
 
-  snippetCopy.textContent = "Copied";
+  snippetCopy.setAttribute("aria-label", "Copied");
   snippetCopy.classList.add("copied");
   setTimeout(() => {
-    snippetCopy.textContent = "Copy";
+    snippetCopy.setAttribute("aria-label", "Copy snippet");
     snippetCopy.classList.remove("copied");
   }, 1200);
 }
