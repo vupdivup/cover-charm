@@ -17,6 +17,18 @@ Both print the URL to open (`--dev` adds `?channel=dev`). Plain
 static — but must be served over HTTP(S), since `app.js` is an ES
 module and fetches the manifest, both blocked under `file://`.
 
+## Hosting
+
+`.github/workflows/pages.yml` publishes this directory to GitHub Pages
+on any push to `master` that touches `site/`, or on demand via the
+Actions tab (`workflow_dispatch`). It uploads `site/` as a Pages
+artifact rather than pointing Pages at a branch, since branch-based
+Pages can only serve the repo root or `/docs`. Requires Pages' source
+set to "GitHub Actions" once, in repo settings.
+
+Asset releases need no run here: the album list is fetched from the CDN
+at runtime, so merging an `assets` PR updates the live page on its own.
+
 ## Data
 
 Nothing is checked in: the page fetches everything from jsDelivr at
