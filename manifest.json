@@ -1,0 +1,154 @@
+{
+  "version": "assets-v1",
+  "generated_at": "2026-09-01T20:52:09+00:00",
+  "count": 21,
+  "albums": [
+    {
+      "artist": "Radiohead",
+      "title": "Kid A",
+      "year": 2000,
+      "gif": "gifs/radiohead/kid-a.gif",
+      "preview": "previews/radiohead/kid-a.gif"
+    },
+    {
+      "artist": "Adele",
+      "title": "21",
+      "year": 2011,
+      "gif": "gifs/adele/21.gif",
+      "preview": "previews/adele/21.gif"
+    },
+    {
+      "artist": "Adele",
+      "title": "25",
+      "year": 2015,
+      "gif": "gifs/adele/25.gif",
+      "preview": "previews/adele/25.gif"
+    },
+    {
+      "artist": "Katy Perry",
+      "title": "Teenage Dream",
+      "year": 2010,
+      "gif": "gifs/katy-perry/teenage-dream.gif",
+      "preview": "previews/katy-perry/teenage-dream.gif"
+    },
+    {
+      "artist": "Bruno Mars",
+      "title": "Doo-Wops & Hooligans",
+      "year": 2010,
+      "gif": "gifs/bruno-mars/doo-wops-hooligans.gif",
+      "preview": "previews/bruno-mars/doo-wops-hooligans.gif"
+    },
+    {
+      "artist": "Taylor Swift",
+      "title": "1989",
+      "year": 2014,
+      "gif": "gifs/taylor-swift/1989.gif",
+      "preview": "previews/taylor-swift/1989.gif"
+    },
+    {
+      "artist": "Eminem",
+      "title": "Recovery",
+      "year": 2010,
+      "gif": "gifs/eminem/recovery.gif",
+      "preview": "previews/eminem/recovery.gif"
+    },
+    {
+      "artist": "Michael Bubl\u00e9",
+      "title": "Christmas",
+      "year": 2011,
+      "gif": "gifs/michael-bubl/christmas.gif",
+      "preview": "previews/michael-bubl/christmas.gif"
+    },
+    {
+      "artist": "Sam Smith",
+      "title": "In the Lonely Hour",
+      "year": 2014,
+      "gif": "gifs/sam-smith/in-the-lonely-hour.gif",
+      "preview": "previews/sam-smith/in-the-lonely-hour.gif"
+    },
+    {
+      "artist": "Bruno Mars",
+      "title": "Unorthodox Jukebox",
+      "year": 2012,
+      "gif": "gifs/bruno-mars/unorthodox-jukebox.gif",
+      "preview": "previews/bruno-mars/unorthodox-jukebox.gif"
+    },
+    {
+      "artist": "Kendrick Lamar",
+      "title": "To Pimp a Butterfly",
+      "year": 2015,
+      "gif": "gifs/kendrick-lamar/to-pimp-a-butterfly.gif",
+      "preview": "previews/kendrick-lamar/to-pimp-a-butterfly.gif"
+    },
+    {
+      "artist": "Kanye West",
+      "title": "My Beautiful Dark Twisted Fantasy",
+      "year": 2010,
+      "gif": "gifs/kanye-west/my-beautiful-dark-twisted-fantasy.gif",
+      "preview": "previews/kanye-west/my-beautiful-dark-twisted-fantasy.gif"
+    },
+    {
+      "artist": "Beyonc\u00e9",
+      "title": "Lemonade",
+      "year": 2016,
+      "gif": "gifs/beyonc/lemonade.gif",
+      "preview": "previews/beyonc/lemonade.gif"
+    },
+    {
+      "artist": "LCD Soundsystem",
+      "title": "This Is Happening",
+      "year": 2010,
+      "gif": "gifs/lcd-soundsystem/this-is-happening.gif",
+      "preview": "previews/lcd-soundsystem/this-is-happening.gif"
+    },
+    {
+      "artist": "Lorde",
+      "title": "Melodrama",
+      "year": 2017,
+      "gif": "gifs/lorde/melodrama.gif",
+      "preview": "previews/lorde/melodrama.gif"
+    },
+    {
+      "artist": "Drake",
+      "title": "Take Care",
+      "year": 2011,
+      "gif": "gifs/drake/take-care.gif",
+      "preview": "previews/drake/take-care.gif"
+    },
+    {
+      "artist": "Kacey Musgraves",
+      "title": "Golden Hour",
+      "year": 2018,
+      "gif": "gifs/kacey-musgraves/golden-hour.gif",
+      "preview": "previews/kacey-musgraves/golden-hour.gif"
+    },
+    {
+      "artist": "Frank Ocean",
+      "title": "Blonde",
+      "year": 2016,
+      "gif": "gifs/frank-ocean/blonde.gif",
+      "preview": "previews/frank-ocean/blonde.gif"
+    },
+    {
+      "artist": "Kanye West",
+      "title": "Yeezus",
+      "year": 2013,
+      "gif": "gifs/kanye-west/yeezus.gif",
+      "preview": "previews/kanye-west/yeezus.gif"
+    },
+    {
+      "artist": "One Direction",
+      "title": "Up All Night",
+      "year": 2011,
+      "gif": "gifs/one-direction/up-all-night.gif",
+      "preview": "previews/one-direction/up-all-night.gif"
+    },
+    {
+      "artist": "The Black Keys",
+      "title": "Brothers",
+      "year": 2010,
+      "gif": "gifs/the-black-keys/brothers.gif",
+      "preview": "previews/the-black-keys/brothers.gif"
+    }
+  ]
+}
