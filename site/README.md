@@ -42,8 +42,10 @@ runtime.
 - **Manifest** — fetched from the channel branch,
   `https://cdn.jsdelivr.net/gh/vupdivup/wubwub@<branch>/manifest.json`.
   This is the only path served off a moving branch ref, so it's the only
-  one anything ever purges. A merged release therefore updates the live
-  album list with no commit here.
+  one anything ever purges — and the only one fetched with
+  `cache: "no-cache"`, since jsDelivr gives browsers a week-long copy
+  that no purge can reach. A merged release therefore updates the live
+  album list with no commit here, for returning visitors too.
 
 - **Media** (`gif`, animated; `preview`, static first frame) — resolved
   against `manifest.version` when the manifest carries one, i.e. the

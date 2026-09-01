@@ -71,7 +71,14 @@ function wireIntro() {
 async function init() {
   let albums = [];
   try {
-    const res = await fetch(MANIFEST_URL);
+    // `no-cache` = revalidate, not bypass: jsDelivr hands the manifest
+    // out with max-age=604800, and that week-long *browser* copy is
+    // beyond the reach of the CDN purge a release does, so a returning
+    // visitor would sit on a stale album list long after the release
+    // merged. Revalidating costs a conditional request that is a 304
+    // whenever nothing changed. Media below stay hard-cached, which is
+    // safe: their URLs carry the immutable release tag.
+    const res = await fetch(MANIFEST_URL, { cache: "no-cache" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const manifest = await res.json();
     albums = manifest.albums ?? [];
