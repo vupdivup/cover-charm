@@ -1,4 +1,4 @@
-"""album_covers: fetch album cover art via MusicBrainz + Cover Art Archive."""
+"""wubwub.covers: fetch album cover art via MusicBrainz + Cover Art Archive."""
 
 import logging
 

@@ -1,4 +1,4 @@
-"""Env-driven settings, read the same way packages/render/src/render/blender.py
+"""Env-driven settings, read the same way src/wubwub/media/blender.py
 reads BLENDER: plain os.environ.get with a default, no config framework.
 """
 
@@ -16,8 +16,9 @@ class Settings:
     minio_secret_key: str
     minio_bucket: str
     # Separate bucket for rendered GIFs -- covers and GIFs are different
-    # media with different producers (album-covers vs. render), so they
-    # don't share a bucket even though they share this DB/object store.
+    # kinds of output with different producers (wubwub.covers vs.
+    # wubwub.media), so they don't share a bucket even though they
+    # share this DB/object store.
     minio_gif_bucket: str
     # The URL boto3 talks to and the URL stored in the DB can differ (e.g.
     # a container-internal host vs. localhost for whoever reads the row
@@ -29,7 +30,7 @@ class Settings:
         minio_endpoint = os.environ.get("MINIO_ENDPOINT", "http://localhost:9000")
         return cls(
             database_url=os.environ.get(
-                "DATABASE_URL", "postgresql://cover_art:cover_art@localhost:5432/cover_art"
+                "DATABASE_URL", "postgresql://wubwub:wubwub@localhost:5432/wubwub"
             ),
             minio_endpoint=minio_endpoint,
             minio_access_key=os.environ.get("MINIO_ACCESS_KEY", "minioadmin"),

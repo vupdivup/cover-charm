@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from album_covers import CoverArtNotFound, artwork_url, download_url, find_album
+from ..covers import CoverArtNotFound, artwork_url, download_url, find_album
 
 from .config import Settings
 from .db import StoredAlbum, connect, upsert_album
@@ -25,7 +25,7 @@ def upload_album(
 ) -> StoredAlbum:
     """Find an album's cover, store it in MinIO, upsert its row in Postgres.
 
-    Raises album_covers.CoverArtNotFound if no matching album/cover exists.
+    Raises wubwub.covers.CoverArtNotFound if no matching album/cover exists.
     Idempotent on (artist, title) case-insensitively: re-uploading the same
     album overwrites the existing object and row rather than duplicating.
     """

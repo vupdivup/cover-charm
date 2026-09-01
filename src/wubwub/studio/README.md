@@ -1,8 +1,8 @@
-# album-store
+# wubwub.studio
 
-Fetch an album's cover art (via [`album-covers`](../../album-covers)),
+Fetch an album's cover art (via [`wubwub.covers`](../covers)),
 persist it, and optionally render it into a GIF (via
-[`render`](../../render)) and persist that too. Two operations:
+[`wubwub.media`](../media)) and persist that too. Two operations:
 
 - upload an album by artist + title -- cover goes to the `covers`
   bucket, metadata + cover URL upserted into Postgres
@@ -21,7 +21,7 @@ pgweb (see `compose.yaml`, `.env.example`). Defaults assume that setup:
 
 | var | default |
 |---|---|
-| `DATABASE_URL` | `postgresql://cover_art:cover_art@localhost:5432/cover_art` |
+| `DATABASE_URL` | `postgresql://wubwub:wubwub@localhost:5432/wubwub` |
 | `MINIO_ENDPOINT` | `http://localhost:9000` |
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | `minioadmin` / `minioadmin` |
 | `MINIO_BUCKET` | `covers` |
@@ -39,15 +39,15 @@ not for a real deployment (front it with a CDN/presigned URLs instead).
 ## Inspecting local data
 
 - **Postgres**: pgweb at http://localhost:8080 -- pre-wired to the
-  `cover_art` DB via `PGWEB_DATABASE_URL`, no login form. Or `psql`
+  `wubwub` DB via `PGWEB_DATABASE_URL`, no login form. Or `psql`
   straight into the container:
-  `docker compose exec postgres psql -U cover_art -d cover_art -c 'select * from albums;'`
+  `docker compose exec postgres psql -U wubwub -d wubwub -c 'select * from albums;'`
 - **MinIO**: console at http://localhost:9001, login
   `minioadmin`/`minioadmin` -- browse the `covers` and `gifs` buckets.
 
 ## Install
 
-From within this directory:
+From the repo root:
 
 ```
 uv sync
@@ -58,10 +58,10 @@ uv sync
 **CLI:**
 
 ```
-album-store init
-album-store upload "In Rainbows" --artist "Radiohead"
-album-store render --blend animation.blend --material CoverMat
-album-store publish
+wubwub studio init
+wubwub studio upload "In Rainbows" --artist "Radiohead"
+wubwub studio render --blend animation.blend --material CoverMat
+wubwub studio publish
 ```
 
 `init` creates the `albums` table and both buckets if they don't exist
@@ -83,7 +83,7 @@ default or env var -- neither the `.blend` file nor the material name
 to swap is something this package can discover on its own. Other flags:
 `--fps` (default 24.0), `--limit N` (cap albums per run), `--blender`
 (explicit Blender executable path, otherwise auto-detected the same way
-[`render`](../../render) does). One album failing (bad material name,
+[`wubwub.media`](../media) does). One album failing (bad material name,
 missing cover object, a Blender error) is logged and skipped rather
 than aborting the run; the command prints each rendered GIF's URL to
 stdout and exits 1 if any album failed (the preview URL is logged, not
@@ -125,7 +125,7 @@ once there's a production site whose releases need pinning.
 `${BASE}/${album.preview}`:
 
 ```js
-BASE = 'https://cdn.jsdelivr.net/gh/vupdivup/cover-charm@assets-dev'
+BASE = 'https://cdn.jsdelivr.net/gh/vupdivup/wubwub@assets-dev'
 ```
 
 jsDelivr sends `Access-Control-Allow-Origin: *`, so a `localhost` site
@@ -138,7 +138,7 @@ command.
 **Python API:**
 
 ```python
-from album_store import upload_album, render_albums, publish_assets
+from wubwub.studio import upload_album, render_albums, publish_assets
 
 stored = upload_album("Kid A", artist="Radiohead")
 print(stored.cover_url)
@@ -151,13 +151,13 @@ print(result.base_url)
 
 Exports: `Settings`, `StoredAlbum`, `upload_album`, `RenderOutcome`,
 `render_albums`, `PublishResult`, `publish_assets`. `upload_album`
-raises `album_covers.CoverArtNotFound` if no matching album or cover
+raises `wubwub.covers.CoverArtNotFound` if no matching album or cover
 exists; `publish_assets` raises `PublishError` for a git failure and
 `ValueError` if there's nothing to publish.
 
 ## Logging
 
-Same convention as `album-covers`: stdlib `logging` under the
-`album_store` name, `NullHandler`ed by default. `-v`/`-vv`/`-q` on the
+Same convention as `wubwub.covers`: stdlib `logging` under the
+`wubwub.studio` name, `NullHandler`ed by default. `-v`/`-vv`/`-q` on the
 CLI; as a library, configure `logging` yourself and optionally
-`logging.getLogger("album_store").setLevel(...)`.
+`logging.getLogger("wubwub.studio").setLevel(...)`.

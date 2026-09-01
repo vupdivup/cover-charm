@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 def _slug(text: str) -> str:
-    # Local rather than reused from album_covers._util.slugify -- that
-    # module is private to album_covers, and this is a two-line rule.
+    # Local rather than reused from wubwub.covers._util.slugify -- that
+    # module is private to wubwub.covers, and this is a two-line rule.
     slug = re.sub(r"[^a-zA-Z0-9]+", "-", text).strip("-").lower()
     return slug or "x"
 

@@ -32,7 +32,7 @@ _CAA_URL = "https://coverartarchive.org/release-group/"
 # MusicBrainz asks that clients identify themselves with a descriptive
 # User-Agent including contact info; an anonymous one risks a harder block
 # than the ordinary rate limit.
-_USER_AGENT = "album-covers/0.1.0 (https://github.com/vupdivup/cover-art)"
+_USER_AGENT = "wubwub/0.1.0 (https://github.com/vupdivup/wubwub)"
 
 # MusicBrainz allows roughly 1 request/second, uncredentialed, and answers
 # 503 (sometimes 429) past that -- Cover Art Archive shares the block since

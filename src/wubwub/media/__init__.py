@@ -1,4 +1,4 @@
-"""render: swap an image into a Blender animation and turn it into a GIF."""
+"""wubwub.media: swap an image into a Blender animation and turn it into a GIF."""
 
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ def render_gif(
     blend = Path(blend)
     output = Path(output) if output is not None else Path(f"{blend.stem}.gif")
 
-    scratch = Path(tempfile.mkdtemp(prefix="render-"))
+    scratch = Path(tempfile.mkdtemp(prefix="wubwub-render-"))
     try:
         scratch_blend = scratch / blend.name
         shutil.copy2(blend, scratch_blend)
