@@ -548,8 +548,12 @@ main {
 }
 
 .snippet__tabs button {
-  flex: 0 0 auto;
-  width: 6.5rem;
+  /* Grow to an equal 6.5rem when there's room, but never below each
+     tab's own text width: a fixed width overflowed the dialog on narrow
+     phones and scrolled the page sideways, and shrinking equally would
+     have squeezed the longest label ("Markdown") first. */
+  flex: 1 0 auto;
+  max-width: 6.5rem;
   appearance: none;
   border: var(--border-width) solid var(--border);
   background: transparent;
@@ -627,5 +631,14 @@ main {
        short phone screen; go squarer so the sheet doesn't feel like
        it's mostly empty media. */
     aspect-ratio: 4 / 3;
+  }
+
+  .detail__body {
+    /* Claw back horizontal room for the snippet tabs and code line. */
+    padding-inline: 1rem;
+  }
+
+  .snippet__tabs button {
+    padding-inline: 0.4rem;
   }
 }
