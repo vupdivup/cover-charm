@@ -13,7 +13,7 @@
   --border-width: 1px;
   --radius: 0px;
   --font: "Fragment Mono", ui-monospace, "Courier New", monospace;
-  --font-display: "Clash Display", var(--font);
+  --font-display: "Clash Grotesk", var(--font);
   --font-title: var(--font);
 }
 
@@ -73,8 +73,8 @@ body {
   margin: 0;
   font-family: var(--font-display);
   font-size: 1.9rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .site-header__title p {
