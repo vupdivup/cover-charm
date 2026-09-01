@@ -40,6 +40,16 @@ body {
   color: var(--fg-muted);
 }
 
+/* Shared focus style for every interactive control: any border goes
+   transparent and a thick inset outline takes over, so focus never
+   nudges layout (outline sits outside the box model) or doubles up
+   with a control's own border. */
+:is(.icon-btn, .search input, .card, .detail__close, .snippet__tabs button, .copy-btn):focus-visible {
+  border-color: transparent;
+  outline: 2px solid var(--border);
+  outline-offset: -2px;
+}
+
 .icon-sprite {
   position: absolute;
   width: 0;
@@ -63,6 +73,7 @@ body {
   padding: 1.25rem clamp(1rem, 4vw, 3rem);
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(10px);
+  border-bottom: var(--border-width) solid var(--border);
 }
 
 .header-actions {
@@ -149,11 +160,6 @@ body {
   background: var(--accent);
 }
 
-.icon-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
-}
-
 /* Show sun in dark mode (click to go light), moon in light/system mode. */
 #theme-toggle .icon-sun {
   display: none;
@@ -171,19 +177,11 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
   width: 100%;
   padding: 0.6rem 0.75rem 0.6rem 2.25rem;
   border-radius: var(--radius);
-  border: none;
-  border-bottom: var(--border-width) solid var(--border);
-  background: transparent;
+  border: var(--border-width) solid var(--border);
+  background: var(--bg-elevated);
   color: var(--fg);
   font: inherit;
   font-size: 0.9rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.search input:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .search input::-webkit-search-cancel-button {
@@ -272,11 +270,6 @@ main {
 .card:focus-visible {
   transform: translateY(-3px);
   box-shadow: var(--shadow);
-}
-
-.card:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow), 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .card__media {
