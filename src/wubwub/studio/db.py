@@ -50,7 +50,7 @@ def connect(settings: Settings) -> psycopg.Connection:
 def ensure_schema(conn: psycopg.Connection) -> None:
     """Create the albums table/index if they don't exist yet.
 
-    Lets `album-store init` (or first library use) work against a bare
+    Lets `wubwub studio init` (or first library use) work against a bare
     Postgres instance that wasn't bootstrapped from sql/init.sql.
     """
     schema_sql = resources.files(__package__).joinpath("schema.sql").read_text()

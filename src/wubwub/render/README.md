@@ -1,4 +1,4 @@
-# render
+# wubwub.render
 
 Take a Blender `.blend` file, swap an image into one of its image
 textures, render the animation, and assemble the frames into a GIF.
@@ -9,16 +9,10 @@ write back to the file it opens anyway.
 
 ## Install
 
-From within this directory:
+From the repo root:
 
 ```
 uv sync
-```
-
-Or from the repo root, as part of the `cover-art` workspace:
-
-```
-uv sync --all-packages
 ```
 
 ## Requirements
@@ -40,7 +34,7 @@ via `wslpath` automatically when needed — nothing to configure).
 ## CLI
 
 ```
-render scene.blend --image cover.jpg --material CoverMaterial -o out.gif --fps 12
+wubwub render gif scene.blend --image cover.jpg --material CoverMaterial -o out.gif --fps 12
 ```
 
 Options: `--image` (required), `--material` (required — the name of the
@@ -60,7 +54,7 @@ Prints the frame count to stderr and the GIF path alone to stdout.
 ## Python API
 
 ```python
-from render import render_gif
+from wubwub.render import render_gif
 
 result = render_gif("scene.blend", "cover.jpg", material="CoverMaterial", fps=12)
 print(result.gif, len(result.frames), result.fps)

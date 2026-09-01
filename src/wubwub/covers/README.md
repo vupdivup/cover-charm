@@ -1,4 +1,4 @@
-# album-covers
+# wubwub.covers
 
 Fetch album cover art by title (plus optional artist), via
 [MusicBrainz](https://musicbrainz.org/doc/MusicBrainz_API) (search) and the
@@ -12,22 +12,10 @@ missing art for something niche enough that no one's uploaded it yet).
 
 ## Install
 
-From within this directory:
+From the repo root:
 
 ```
 uv sync
-```
-
-Or as a dependency of another `uv` project:
-
-```
-uv add --editable /path/to/album-covers
-```
-
-Or with pip:
-
-```
-pip install /path/to/album-covers
 ```
 
 ## Usage
@@ -35,8 +23,8 @@ pip install /path/to/album-covers
 **CLI:**
 
 ```
-album-covers fetch "Kind of Blue" --artist "Miles Davis" -o cover.jpg
-album-covers fetch "Kind of Blue" --artist "Miles Davis" --url-only
+wubwub covers fetch "Kind of Blue" --artist "Miles Davis" -o cover.jpg
+wubwub covers fetch "Kind of Blue" --artist "Miles Davis" --url-only
 ```
 
 Options: `--artist` (narrows the match), `--size` (artwork pixel size,
@@ -58,7 +46,7 @@ Archive, so a few of the top-ranked candidates are tried in order
 **Python API:**
 
 ```python
-from album_covers import download_cover, search_albums, find_cover_url
+from wubwub.covers import download_cover, search_albums, find_cover_url
 
 data = download_cover("Kind of Blue", artist="Miles Davis")
 
@@ -72,7 +60,7 @@ Exports: `Album`, `CoverArtNotFound`, `search_albums`, `find_album`,
 
 ## Logging
 
-The library logs via the stdlib `logging` module under the `album_covers`
+The library logs via the stdlib `logging` module under the `wubwub.covers`
 name (`NullHandler`ed by default, so importing it is silent). One line
 per resolved cover (INFO), per skipped/no-art candidate (DEBUG/INFO), and
 per rejected match or rate-limit retry (WARNING); query strings and
@@ -82,22 +70,22 @@ candidate scores at DEBUG.
 Logs go to stderr; stdout stays just the resolved URL / written path.
 
 ```
-album-covers fetch "Kind of Blue" --artist "Miles Davis" -v
+wubwub covers fetch "Kind of Blue" --artist "Miles Davis" -v
 ```
 
 **As a library:** nothing extra is needed if the host app already
-configures `logging`; to see just this package's records:
+configures `logging`; to see just this subpackage's records:
 
 ```python
 import logging
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("album_covers").setLevel(logging.INFO)
+logging.getLogger("wubwub.covers").setLevel(logging.INFO)
 ```
 
 ## Rate limiting
 
 Throttling and retry against MusicBrainz/Cover Art Archive's shared rate
 limit (~1 request/second uncredentialed) live in `fetch.py` and apply to
-every caller. Tune via `album_covers.fetch.SEARCH_INTERVAL` (default 1.1s,
+every caller. Tune via `wubwub.covers.fetch.SEARCH_INTERVAL` (default 1.1s,
 one request per call), `MAX_RETRIES` (default 5), and `INITIAL_BACKOFF`
 (default 2.0s, doubled per retry) if you hit 429/503 anyway.

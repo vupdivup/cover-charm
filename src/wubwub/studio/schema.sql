@@ -1,7 +1,6 @@
--- Local-dev bootstrap: mounted into postgres:/docker-entrypoint-initdb.d/
--- by compose.yaml, so a fresh `docker compose up` already has the table.
--- Identical to packages/album-store/src/album_store/schema.sql, which is
--- the source of truth applied by `album-store init` against any DB.
+-- Source of truth, applied by `wubwub studio init` against any DB.
+-- Identical to sql/init.sql, the local-dev bootstrap mounted into
+-- postgres:/docker-entrypoint-initdb.d/ by compose.yaml.
 
 CREATE TABLE IF NOT EXISTS albums (
     id          BIGSERIAL PRIMARY KEY,

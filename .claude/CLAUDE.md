@@ -10,32 +10,33 @@ the user unless asked to.
 
 ## Overview
 
-This is a `uv` workspace with two packages:
+This is a single `uv` package, `wubwub` (`src/wubwub/`), with three
+subpackages behind one `wubwub` CLI (`wubwub <group> <command>`):
 
-- `album-covers` (`packages/album-covers/`) fetches album cover art
-  via MusicBrainz + Cover Art Archive. See
-  `packages/album-covers/src/album_covers/README.md` for full usage.
-- `render` (`packages/render/`) swaps an image into a Blender
+- `covers` (`src/wubwub/covers/`) fetches album cover art via
+  MusicBrainz + Cover Art Archive. See
+  `src/wubwub/covers/README.md` for full usage.
+- `render` (`src/wubwub/render/`) swaps an image into a Blender
   animation's texture, renders it, and assembles the frames into a
-  GIF. See `packages/render/src/render/README.md` for full usage.
-- `album-store` (`packages/album-store/`) fetches a cover via
-  `album-covers` and persists it: image to MinIO/S3, metadata + object
-  URL to Postgres. It can also `publish` rendered GIFs by force-pushing
-  them to the `assets-dev` git branch, served over jsDelivr for the
-  `site/` showcase. See
-  `packages/album-store/src/album_store/README.md` for full usage.
+  GIF. See `src/wubwub/render/README.md` for full usage.
+- `studio` (`src/wubwub/studio/`) fetches a cover via `wubwub.covers`
+  and persists it: image to MinIO/S3, metadata + object URL to
+  Postgres. It can also batch-render covers into GIFs (`batch.py`, via
+  `wubwub.render`) and `publish` them by force-pushing to the
+  `assets-dev` git branch, served over jsDelivr for the `site/`
+  showcase. See `src/wubwub/studio/README.md` for full usage.
 - `site/` is a static, no-build showcase page (plain HTML/CSS/JS, not
-  a `uv` workspace member) that browses `assets-dev` GIFs from a
-  checked-in copy of the manifest at `site/data/manifest.json`. See
+  a Python package) that browses `assets-dev` GIFs from a checked-in
+  copy of the manifest at `site/data/manifest.json`. See
   `site/README.md`.
 
-`album-covers` and `render` are `uv` workspace members under
-`packages/`, each with its own `pyproject.toml`. The root
-`pyproject.toml` is a workspace-only root (`package = false`), no
-source of its own. Each package has its own `cli.py` entry point and
-its own Python API; how the modules inside a package are split up is
-a per-package call, not a fixed convention to enforce across the
-workspace.
+Each subpackage's CLI group lives in its own `cli.py`, registered onto
+the top-level parser by `src/wubwub/cli.py`; each also has its own
+Python API. How the modules inside a subpackage are split up is a
+per-subpackage call, not a fixed convention to enforce across all
+three. `studio`'s batch-render module is named `batch.py` rather than
+`render.py` so it doesn't shadow the sibling `wubwub.render`
+subpackage it imports from.
 
 ## Environment & dependencies
 
@@ -52,10 +53,10 @@ the surrounding code.
 
 ## Logging
 
-Every package can be driven both as a CLI and as a library by another
-package in this workspace (e.g. `album-covers` from a future caller in
-`render` or `album_seed`), so logging follows the standard stdlib
-`logging` library/application split:
+Every subpackage can be driven both as a CLI group and as a library by
+another subpackage (e.g. `wubwub.covers` from `wubwub.studio`), so
+logging follows the standard stdlib `logging` library/application
+split:
 
 - **Library modules only emit.** Each module gets
   `logger = logging.getLogger(__name__)` and calls
@@ -63,29 +64,30 @@ package in this workspace (e.g. `album-covers` from a future caller in
   handlers, never calls `logging.basicConfig`. Use lazy `%s` formatting
   (`logger.info("...%s", x)`, not f-strings) so unemitted records cost
   nothing in hot/bulk loops.
-- **Each package's `__init__.py` attaches a `logging.NullHandler()`** to
-  its top-level logger, so importing the package is silent and doesn't
+- **Each subpackage's `__init__.py` attaches a `logging.NullHandler()`**
+  to its top-level logger, so importing it is silent and doesn't
   trigger the stdlib's "no handlers found" warning when the host hasn't
   configured logging.
-- **Only a `cli.py` configures handlers**, via `logging.basicConfig` on
-  `sys.stderr`, gated by `-v/--verbose` (repeatable: info, then debug)
-  and `-q/--quiet` flags. stdout stays reserved for the CLI's machine
-  output (a URL, a written path, JSON); stderr carries both today's
-  error messages and the new log stream.
-- **A caller package needs nothing extra**: configuring `logging` once in
-  its own entry point picks up every dependency package's records for
-  free, and `logging.getLogger("<dep_package>").setLevel(...)` tunes just
+- **Only `src/wubwub/cli.py` configures handlers**, via
+  `logging.basicConfig` on `sys.stderr`, gated by `-v/--verbose`
+  (repeatable: info, then debug) and `-q/--quiet` flags, shared by
+  every subcommand group. stdout stays reserved for the CLI's machine
+  output (a URL, a written path, JSON); stderr carries both error
+  messages and the log stream.
+- **A caller subpackage needs nothing extra**: `wubwub.cli` configuring
+  `logging` once picks up every subpackage's records for free, and
+  `logging.getLogger("wubwub.<subpackage>").setLevel(...)` tunes just
   one of them.
 - Level guide: DEBUG for per-request detail (queries, scores, byte
   counts), INFO for one line per successful/skipped unit of work,
   WARNING for retried/degraded paths, ERROR only for something the
-  caller must handle. See `packages/album-covers/src/album_covers/fetch.py`
-  and `cli.py` for a worked example.
+  caller must handle. See `src/wubwub/covers/fetch.py` and
+  `src/wubwub/covers/cli.py` for a worked example.
 
 ## Testing & verification
 
 No automated test suite yet. Verify changes by running the CLI
-(`uv run album-covers ...`). Add the test command here once a suite exists.
+(`uv run wubwub ...`). Add the test command here once a suite exists.
 
 ## Git & commits
 
@@ -104,11 +106,11 @@ report it, don't chain a push onto it on your own judgment.
 - **MusicBrainz + Cover Art Archive** — uncredentialed, rate-limited
   (~1 req/sec, shared across both since Cover Art Archive is keyed by
   MusicBrainz's MBIDs); requires a descriptive `User-Agent`. Throttle/
-  retry knobs live in `packages/album-covers/src/album_covers/fetch.py`
+  retry knobs live in `src/wubwub/covers/fetch.py`
   (`SEARCH_INTERVAL`, `MAX_RETRIES`, `INITIAL_BACKOFF`). Fuzzy-match
   threshold for accepting a result is `MATCH_THRESHOLD` in same file.
 - **Blender** — a local install, driven as a subprocess in background
-  mode (`--background`) by `packages/render/src/render/blender.py`,
+  mode (`--background`) by `src/wubwub/render/blender.py`,
   not imported as the `bpy` package. Auto-detected via `PATH` and the
   default per-platform install directories, or point at it explicitly
   with `--blender`/`BLENDER`. Works from WSL against a Windows-side
@@ -118,10 +120,10 @@ report it, don't chain a push onto it on your own judgment.
   root `compose.yaml`; copy `.env.example` to `.env` to override
   defaults). Postgres holds the `albums` table (schema in
   `sql/init.sql`, mirrored in
-  `packages/album-store/src/album_store/schema.sql`); MinIO is the
+  `src/wubwub/studio/schema.sql`); MinIO is the
   S3-compatible object store, accessed with boto3, split across two
-  buckets: `covers` (album art) and `gifs` (rendered via `render`).
+  buckets: `covers` (album art) and `gifs` (rendered via `wubwub.render`).
   Config env vars (`DATABASE_URL`, `MINIO_ENDPOINT`,
   `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`, `MINIO_BUCKET`,
   `MINIO_GIF_BUCKET`, `MINIO_PUBLIC_ENDPOINT`) are read in
-  `packages/album-store/src/album_store/config.py`.
+  `src/wubwub/studio/config.py`.

@@ -1,7 +1,7 @@
 # site
 
 Static showcase gallery for rendered album covers, per the contract
-described in `packages/album-store/src/album_store/README.md`. Plain
+described in `src/wubwub/studio/README.md`. Plain
 HTML/CSS/JS, no build step, one runtime dependency (Fuse.js) loaded as
 an ES module straight from jsDelivr.
 
@@ -18,7 +18,7 @@ blocked under `file://`.
 ## Data
 
 - `data/manifest.json` — a checked-in **copy** of the manifest
-  published to the `assets-dev` branch by `album-store publish`. It is
+  published to the `assets-dev` branch by `wubwub studio publish`. It is
   refreshed by hand for now:
 
   ```
@@ -33,7 +33,7 @@ blocked under `file://`.
   the `BASE` constant at the top of `app.js`:
 
   ```js
-  const BASE = "https://cdn.jsdelivr.net/gh/vupdivup/cover-charm@assets-dev";
+  const BASE = "https://cdn.jsdelivr.net/gh/vupdivup/wubwub@assets-dev";
   ```
 
   Update `BASE` if/when a reviewed "prod" `assets` channel replaces

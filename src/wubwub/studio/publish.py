@@ -86,7 +86,7 @@ def _write_tree(albums: list[StoredAlbum], *, out_dir: Path, settings: Settings)
 
     An album missing an object (e.g. deleted from MinIO after being
     rendered) is logged and skipped rather than aborting the whole
-    publish -- same posture as render.py's per-album error handling.
+    publish -- same posture as batch.py's per-album error handling.
     """
     s3 = s3_client(settings)
     manifest_albums = []
@@ -148,8 +148,8 @@ def _push_tree(tree_dir: Path, *, remote: str, branch: str, repo_dir: str | Path
     # Pushing `HEAD:refs/heads/<branch>` below lets the local and
     # remote names differ, so this scratch branch is deleted at the end
     # and never collides with itself on the next publish.
-    local_branch = f"album-store-publish-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
-    with tempfile.TemporaryDirectory(prefix="album-store-publish-") as tmp:
+    local_branch = f"wubwub-publish-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
+    with tempfile.TemporaryDirectory(prefix="wubwub-publish-") as tmp:
         worktree = Path(tmp) / "worktree"
         _run_git(["worktree", "add", "--orphan", "-b", local_branch, str(worktree)], cwd=repo_dir)
         try:
@@ -166,9 +166,9 @@ def _push_tree(tree_dir: Path, *, remote: str, branch: str, repo_dir: str | Path
             _run_git(
                 [
                     "-c",
-                    "user.name=album-store",
+                    "user.name=wubwub",
                     "-c",
-                    "user.email=album-store@localhost",
+                    "user.email=wubwub@localhost",
                     "commit",
                     "-m",
                     f"Publish {branch}",
@@ -229,10 +229,10 @@ def publish_assets(
     with connect(settings) as conn:
         albums = albums_with_gif(conn, limit=limit)
     if not albums:
-        raise ValueError("no albums have a rendered GIF yet -- run `album-store render` first")
+        raise ValueError("no albums have a rendered GIF yet -- run `wubwub studio render` first")
     logger.info("%d album(s) to publish", len(albums))
 
-    tree_dir = Path(out_dir) if out_dir else Path(tempfile.mkdtemp(prefix="album-store-publish-tree-"))
+    tree_dir = Path(out_dir) if out_dir else Path(tempfile.mkdtemp(prefix="wubwub-publish-tree-"))
     tree_dir.mkdir(parents=True, exist_ok=True)
     count = _write_tree(albums, out_dir=tree_dir, settings=settings)
     if count == 0:

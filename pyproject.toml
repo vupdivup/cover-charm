@@ -1,10 +1,22 @@
 [project]
-name = "cover-art"
+name = "wubwub"
 version = "0.1.0"
+description = "Fetch album cover art, render it through a Blender animation, and publish the results"
+readme = "README.md"
+authors = [
+    { name = "vupdivup", email = "vnmatt2003@gmail.com" }
+]
 requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.1",
+    "pillow>=12.3.0",
+    "psycopg[binary]>=3.2",
+    "boto3>=1.35",
+]
 
-[tool.uv]
-package = false
+[project.scripts]
+wubwub = "wubwub.cli:main"
 
-[tool.uv.workspace]
-members = ["packages/render", "packages/album-covers", "packages/album-store"]
+[build-system]
+requires = ["uv_build>=0.11.19,<0.12.0"]
+build-backend = "uv_build"

@@ -1,11 +1,11 @@
-"""album_store: persist album covers (Postgres metadata + MinIO/S3 objects)."""
+"""wubwub.studio: persist album covers (Postgres metadata + MinIO/S3 objects)."""
 
 import logging
 
+from .batch import RenderOutcome, render_albums
 from .config import Settings
 from .db import StoredAlbum
 from .publish import PublishResult, publish_assets
-from .render import RenderOutcome, render_albums
 from .upload import upload_album
 
 __all__ = [

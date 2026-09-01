@@ -1,7 +1,10 @@
-"""Batch-render stored covers into GIFs (via the render package) and store them.
+"""Batch-render stored covers into GIFs (via wubwub.render) and store them.
 
 Reads cover bytes back out of the covers bucket rather than re-fetching
 from Cover Art Archive, so a render run only needs Postgres/MinIO.
+
+Named `batch.py` rather than `render.py` so it doesn't shadow the
+sibling `wubwub.render` subpackage it imports from.
 """
 
 from __future__ import annotations
@@ -13,11 +16,7 @@ from pathlib import Path
 
 from botocore.exceptions import ClientError
 
-# Imported with an explicit alias -- this module is itself named
-# `render`, so `import render` alone would be easy to misread as a
-# self-import even though absolute imports make it unambiguous.
-import render as render_pkg
-
+from ..render import BlenderError, GifError, render_gif
 from .config import Settings
 from .db import StoredAlbum, albums_to_render, connect, set_album_gif
 from .objects import client as s3_client
@@ -27,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["RenderOutcome", "render_albums"]
 
-_RENDER_ERRORS = (render_pkg.BlenderError, render_pkg.GifError, ValueError, OSError, ClientError)
+_RENDER_ERRORS = (BlenderError, GifError, ValueError, OSError, ClientError)
 
 
 @dataclass(frozen=True)
@@ -50,7 +49,7 @@ def _render_one(
     fps: float,
     blender: str | Path | None,
 ) -> RenderOutcome:
-    with tempfile.TemporaryDirectory(prefix="album-store-render-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="wubwub-studio-render-") as tmp:
         tmp_dir = Path(tmp)
         cover_bytes = get_object(s3, settings.minio_bucket, album.cover_key)
         image_path = tmp_dir / "cover.jpg"
@@ -61,7 +60,7 @@ def _render_one(
         # unresolved, so both must be absolute.
         gif_path = tmp_dir / "cover.gif"
         preview_path = tmp_dir / "preview.gif"
-        result = render_pkg.render_gif(
+        result = render_gif(
             blend,
             image_path,
             material=material,

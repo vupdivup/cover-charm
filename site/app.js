@@ -1,7 +1,7 @@
 // Single constant tying the site to a published asset channel. Swap to
 // an `assets` (tagged/reviewed) branch here once one exists — see
-// packages/album-store/src/album_store/README.md.
-const BASE = "https://cdn.jsdelivr.net/gh/vupdivup/cover-charm@assets-dev";
+// src/wubwub/studio/README.md.
+const BASE = "https://cdn.jsdelivr.net/gh/vupdivup/wubwub@assets-dev";
 
 import Fuse from "https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/+esm";
 
