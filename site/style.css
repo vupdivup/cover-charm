@@ -5,14 +5,15 @@
   --bg-elevated: light-dark(#ffffff, #1b1b1e);
   --fg: light-dark(#18181b, #ededf0);
   --fg-muted: light-dark(#6b6b75, #9a9aa5);
-  --border: light-dark(#e4e2dd, #2a2a2e);
-  --accent: light-dark(#7c5cff, #a48bff);
-  --accent-fg: #ffffff;
+  --border: light-dark(#18181b, #ededf0);
+  --accent: light-dark(#ff2d55, #f7d716);
+  --accent-fg: light-dark(#ffffff, #18181b);
   --shadow: light-dark(0 8px 24px -12px rgb(0 0 0 / 0.25), 0 8px 24px -12px rgb(0 0 0 / 0.6));
   --shadow-lg: light-dark(0 24px 60px -20px rgb(0 0 0 / 0.35), 0 24px 60px -20px rgb(0 0 0 / 0.8));
-  --radius: 14px;
-  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Bagel Fat One", var(--font);
+  --border-width: 2px;
+  --radius: 0px;
+  --font: "Fragment Mono", ui-monospace, "Courier New", monospace;
+  --font-display: "Clash Display", var(--font);
   --font-title: var(--font);
 }
 
@@ -27,7 +28,9 @@ body {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--bg) radial-gradient(circle, color-mix(in srgb, var(--fg) 5%, transparent) 1.4px, transparent 1.4px);
+  background-size: 10px 10px;
+  background-attachment: fixed;
   color: var(--fg);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
@@ -50,22 +53,27 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  /* 3-col grid, not flex space-between: search sits in the true
+     center column instead of drifting toward whichever side (title
+     vs actions) is wider. */
+  grid-template-columns: 1fr minmax(0, 520px) 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
   padding: 1.25rem clamp(1rem, 4vw, 3rem);
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
+}
+
+.header-actions {
+  justify-self: end;
 }
 
 .site-header__title h1 {
   margin: 0;
   font-family: var(--font-display);
   font-size: 1.9rem;
-  font-weight: normal;
+  font-weight: 600;
   letter-spacing: 0.02em;
 }
 
@@ -78,19 +86,26 @@ body {
   position: relative;
   display: flex;
   align-items: center;
-  width: min(360px, 100%);
+  width: 100%;
 }
 
 @media (max-width: 640px) {
   /* Icons sit next to the title on the first line; search drops to
      its own full-width line below, instead of wrapping after the
-     icons in DOM order. */
+     icons in DOM order. The 3-col centering grid only makes sense at
+     desktop widths, so fall back to wrapping flex here. */
+  .site-header {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
   .site-header__title {
     order: 1;
   }
 
   .header-actions {
     order: 2;
+    justify-self: auto;
   }
 
   .search {
@@ -118,7 +133,7 @@ body {
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   border: none;
   background: none;
   color: var(--fg-muted);
@@ -154,9 +169,10 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
 .search input {
   width: 100%;
   padding: 0.6rem 0.75rem 0.6rem 2.25rem;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
+  border-radius: var(--radius);
+  border: none;
+  border-bottom: var(--border-width) solid var(--border);
+  background: transparent;
   color: var(--fg);
   font: inherit;
   font-size: 0.9rem;
@@ -181,7 +197,8 @@ main {
 
 .site-footer {
   padding: 1.5rem clamp(1rem, 4vw, 3rem) 2.5rem;
-  border-top: 1px solid var(--border);
+  border-top: var(--border-width) solid var(--border);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
   color: var(--fg-muted);
   font-size: 0.8rem;
   text-align: center;
@@ -214,9 +231,11 @@ main {
 }
 
 .grid {
+  --grid-gap: 1.8rem;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 1.1rem;
+  gap: var(--grid-gap);
+  overflow: hidden;
 }
 
 @media (max-width: 480px) {
@@ -224,15 +243,15 @@ main {
     /* A single 190px min-width track stretches to fill the whole
        narrow viewport, blowing up card art. Force a smaller floor so
        two columns fit instead of one oversized one. */
+    --grid-gap: 0.8rem;
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 0.8rem;
   }
 }
 
 .card {
   appearance: none;
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
+  border: none;
+  background: transparent;
   border-radius: var(--radius);
   padding: 0;
   overflow: hidden;
@@ -245,14 +264,13 @@ main {
   content-visibility: auto;
   contain-intrinsic-size: 260px;
 
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .card:hover,
 .card:focus-visible {
   transform: translateY(-3px);
   box-shadow: var(--shadow);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
 }
 
 .card:focus-visible {
@@ -262,7 +280,7 @@ main {
 
 .card__media {
   aspect-ratio: 1 / 1;
-  background: var(--border);
+  background: transparent;
   overflow: hidden;
 }
 
@@ -274,14 +292,17 @@ main {
 }
 
 .card__body {
-  padding: 0.65rem 0.8rem 0.85rem;
+  background: transparent;
+  padding: 0 0.8rem 0.85rem;
+  text-align: center;
 }
 
 .card__title {
   font-family: var(--font-title);
   font-weight: 600;
   font-size: 0.9rem;
-  line-height: 1.25;
+  line-height: 1;
+  margin-top: -0.2em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -311,7 +332,7 @@ main {
 /* ---------- dialog ---------- */
 
 .detail {
-  border: 1px solid var(--border);
+  border: var(--border-width) solid var(--border);
   border-radius: var(--radius);
   padding: 0;
   width: min(640px, 92vw);
@@ -368,7 +389,7 @@ main {
   margin: 0 0 0.3rem;
   font-family: var(--font-display);
   font-size: 1.6rem;
-  font-weight: normal;
+  font-weight: 600;
   letter-spacing: 0.02em;
 }
 
@@ -398,7 +419,7 @@ main {
   width: 2rem;
   height: 2rem;
   padding: 0.4rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent);
 }
@@ -432,7 +453,7 @@ main {
   padding: 0;
   width: 2rem;
   height: 2rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   border: none;
   background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
   color: var(--fg);
@@ -481,11 +502,11 @@ main {
 
 .snippet__tabs button {
   appearance: none;
-  border: 1px solid var(--border);
+  border: var(--border-width) solid var(--border);
   background: transparent;
   color: var(--fg-muted);
   padding: 0.35rem 0.75rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   font: inherit;
   font-size: 0.8rem;
   cursor: pointer;
@@ -502,8 +523,8 @@ main {
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
   background: var(--bg);
   padding: 0.7rem 0.8rem;
 }
@@ -521,11 +542,11 @@ main {
   flex-shrink: 0;
   align-self: center;
   appearance: none;
-  border: 1px solid var(--border);
+  border: var(--border-width) solid var(--border);
   background: var(--bg-elevated);
   color: var(--fg);
   padding: 0.4rem 0.8rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font: inherit;
   font-size: 0.8rem;
   cursor: pointer;
