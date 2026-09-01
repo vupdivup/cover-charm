@@ -113,17 +113,6 @@ body {
   font-size: 0.85rem;
 }
 
-/* Loud on purpose: this only appears on the dev asset channel. */
-.channel-badge {
-  display: inline-block;
-  padding: 0.05rem 0.35rem;
-  border: var(--border-width) solid var(--border);
-  background: var(--accent);
-  color: var(--accent-fg);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
 .search {
   position: relative;
   display: flex;

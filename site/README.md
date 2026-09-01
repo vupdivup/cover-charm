@@ -36,8 +36,8 @@ runtime.
 
 - **Channel** — `?channel=dev` selects the force-pushed `assets-dev`
   branch; anything else (i.e. the default) selects the reviewed prod
-  `assets` branch. A `dev assets` badge shows in the header on the dev
-  channel so it can't be mistaken for prod.
+  `assets` branch. The page looks identical either way — the query
+  param is the only tell.
 
 - **Manifest** — fetched from the channel branch,
   `https://cdn.jsdelivr.net/gh/vupdivup/wubwub@<branch>/manifest.json`.

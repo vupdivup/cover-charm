@@ -43,7 +43,6 @@ let openerDeactivate = null;
 
 wireThemeToggle();
 wireIntro();
-document.getElementById("channel-badge").hidden = channel !== "dev";
 yearEl.textContent = new Date().getFullYear();
 init();
 
