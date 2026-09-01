@@ -2,7 +2,7 @@
 
 Fetch an album's cover art (via [`wubwub.covers`](../covers)),
 persist it, and optionally render it into a GIF (via
-[`wubwub.render`](../render)) and persist that too. Two operations:
+[`wubwub.media`](../media)) and persist that too. Two operations:
 
 - upload an album by artist + title -- cover goes to the `covers`
   bucket, metadata + cover URL upserted into Postgres
@@ -83,7 +83,7 @@ default or env var -- neither the `.blend` file nor the material name
 to swap is something this package can discover on its own. Other flags:
 `--fps` (default 24.0), `--limit N` (cap albums per run), `--blender`
 (explicit Blender executable path, otherwise auto-detected the same way
-[`wubwub.render`](../render) does). One album failing (bad material name,
+[`wubwub.media`](../media) does). One album failing (bad material name,
 missing cover object, a Blender error) is logged and skipped rather
 than aborting the run; the command prints each rendered GIF's URL to
 stdout and exits 1 if any album failed (the preview URL is logged, not

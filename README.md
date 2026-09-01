@@ -7,7 +7,7 @@ One package, `src/wubwub/`, with three subpackages behind one CLI:
 
 - [`wubwub.covers`](src/wubwub/covers/README.md) -- fetch cover art via
   MusicBrainz + Cover Art Archive
-- [`wubwub.render`](src/wubwub/render/README.md) -- swap an image into a
+- [`wubwub.media`](src/wubwub/media/README.md) -- swap an image into a
   Blender animation's texture, render it, assemble a GIF
 - [`wubwub.studio`](src/wubwub/studio/README.md) -- persist covers/GIFs
   (Postgres + MinIO) and publish them to a git branch for jsDelivr CDN
@@ -26,7 +26,7 @@ uv sync
 
 ```
 wubwub covers fetch "Kind of Blue" --artist "Miles Davis" -o cover.jpg
-wubwub render gif scene.blend --image cover.jpg --material CoverMaterial
+wubwub media render scene.blend --image cover.jpg --material CoverMaterial
 wubwub studio init
 wubwub studio upload "In Rainbows" --artist "Radiohead"
 wubwub studio render --blend animation.blend --material CoverMat

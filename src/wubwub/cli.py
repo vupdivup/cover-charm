@@ -1,4 +1,4 @@
-"""Top-level command-line interface for wubwub: covers, render, studio groups."""
+"""Top-level command-line interface for wubwub: covers, media, studio groups."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import logging
 import sys
 
 from .covers import cli as covers_cli
-from .render import cli as render_cli
+from .media import cli as media_cli
 from .studio import cli as studio_cli
 
 
@@ -46,7 +46,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="group", required=True)
 
     covers_cli.register(sub, logging_parent)
-    render_cli.register(sub, logging_parent)
+    media_cli.register(sub, logging_parent)
     studio_cli.register(sub, logging_parent)
 
     return parser

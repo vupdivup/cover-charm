@@ -16,13 +16,13 @@ subpackages behind one `wubwub` CLI (`wubwub <group> <command>`):
 - `covers` (`src/wubwub/covers/`) fetches album cover art via
   MusicBrainz + Cover Art Archive. See
   `src/wubwub/covers/README.md` for full usage.
-- `render` (`src/wubwub/render/`) swaps an image into a Blender
+- `media` (`src/wubwub/media/`) swaps an image into a Blender
   animation's texture, renders it, and assembles the frames into a
-  GIF. See `src/wubwub/render/README.md` for full usage.
+  GIF. See `src/wubwub/media/README.md` for full usage.
 - `studio` (`src/wubwub/studio/`) fetches a cover via `wubwub.covers`
   and persists it: image to MinIO/S3, metadata + object URL to
   Postgres. It can also batch-render covers into GIFs (`batch.py`, via
-  `wubwub.render`) and `publish` them by force-pushing to the
+  `wubwub.media`) and `publish` them by force-pushing to the
   `assets-dev` git branch, served over jsDelivr for the `site/`
   showcase. See `src/wubwub/studio/README.md` for full usage.
 - `site/` is a static, no-build showcase page (plain HTML/CSS/JS, not
@@ -34,9 +34,10 @@ Each subpackage's CLI group lives in its own `cli.py`, registered onto
 the top-level parser by `src/wubwub/cli.py`; each also has its own
 Python API. How the modules inside a subpackage are split up is a
 per-subpackage call, not a fixed convention to enforce across all
-three. `studio`'s batch-render module is named `batch.py` rather than
-`render.py` so it doesn't shadow the sibling `wubwub.render`
-subpackage it imports from.
+three. `studio`'s batch-render module is named `batch.py` because it's
+batch orchestration over every stored album, not the single-blend
+render itself -- that lives in the sibling `wubwub.media` subpackage
+it imports from.
 
 ## Environment & dependencies
 
@@ -116,7 +117,7 @@ user may be relying on.
   (`SEARCH_INTERVAL`, `MAX_RETRIES`, `INITIAL_BACKOFF`). Fuzzy-match
   threshold for accepting a result is `MATCH_THRESHOLD` in same file.
 - **Blender** — a local install, driven as a subprocess in background
-  mode (`--background`) by `src/wubwub/render/blender.py`,
+  mode (`--background`) by `src/wubwub/media/blender.py`,
   not imported as the `bpy` package. Auto-detected via `PATH` and the
   default per-platform install directories, or point at it explicitly
   with `--blender`/`BLENDER`. Works from WSL against a Windows-side
@@ -128,7 +129,7 @@ user may be relying on.
   `sql/init.sql`, mirrored in
   `src/wubwub/studio/schema.sql`); MinIO is the
   S3-compatible object store, accessed with boto3, split across two
-  buckets: `covers` (album art) and `gifs` (rendered via `wubwub.render`).
+  buckets: `covers` (album art) and `gifs` (rendered via `wubwub.media`).
   Config env vars (`DATABASE_URL`, `MINIO_ENDPOINT`,
   `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`, `MINIO_BUCKET`,
   `MINIO_GIF_BUCKET`, `MINIO_PUBLIC_ENDPOINT`) are read in

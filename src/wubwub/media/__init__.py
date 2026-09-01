@@ -1,4 +1,4 @@
-"""wubwub.render: swap an image into a Blender animation and turn it into a GIF."""
+"""wubwub.media: swap an image into a Blender animation and turn it into a GIF."""
 
 from __future__ import annotations
 

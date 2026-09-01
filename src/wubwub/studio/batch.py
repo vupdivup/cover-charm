@@ -1,10 +1,11 @@
-"""Batch-render stored covers into GIFs (via wubwub.render) and store them.
+"""Batch-render stored covers into GIFs (via wubwub.media) and store them.
 
 Reads cover bytes back out of the covers bucket rather than re-fetching
 from Cover Art Archive, so a render run only needs Postgres/MinIO.
 
-Named `batch.py` rather than `render.py` so it doesn't shadow the
-sibling `wubwub.render` subpackage it imports from.
+Named `batch.py` rather than `render.py` because this module is batch
+orchestration over every stored album, not the single-blend render
+itself -- that lives in the sibling `wubwub.media` subpackage.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from pathlib import Path
 
 from botocore.exceptions import ClientError
 
-from ..render import BlenderError, GifError, render_gif
+from ..media import BlenderError, GifError, render_gif
 from .config import Settings
 from .db import StoredAlbum, albums_to_render, connect, set_album_gif
 from .objects import client as s3_client
