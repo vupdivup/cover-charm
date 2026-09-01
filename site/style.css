@@ -1,13 +1,24 @@
 :root {
   color-scheme: light dark;
 
-  --bg: light-dark(#f7f6f3, #121214);
-  --bg-elevated: light-dark(#ffffff, #1b1b1e);
+  --bg: light-dark(#eae8e2, #121214);
+  --bg-elevated: light-dark(#ffffff, #232327);
   --fg: light-dark(#18181b, #ededf0);
   --fg-muted: light-dark(#6b6b75, #9a9aa5);
   --border: light-dark(#18181b, #ededf0);
   --accent: light-dark(#ff2d55, #f7d716);
   --accent-fg: light-dark(#ffffff, #18181b);
+
+  /* Grain ground, replacing the old dot grid. An SVG fractal-noise tile
+     inlined as a data URI so the page stays build-free and makes no
+     extra request; it tiles at its own 160px size (stitchTiles keeps
+     seams invisible). feTurbulence writes noise into alpha as well as
+     colour, which made the tile half-transparent and near-invisible
+     over a light ground -- feFuncA forces alpha opaque so the grain is
+     pure grey, then background-blend-mode decides its direction:
+     multiply darkens the light ground, screen lightens the dark one.
+     Strength is the rect's opacity, so each theme gets its own URI. */
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0' intercept='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.22'/%3E%3C/svg%3E");
   --shadow: light-dark(0 8px 24px -12px rgb(0 0 0 / 0.25), 0 8px 24px -12px rgb(0 0 0 / 0.6));
   --shadow-lg: light-dark(0 24px 60px -20px rgb(0 0 0 / 0.35), 0 24px 60px -20px rgb(0 0 0 / 0.8));
   --border-width: 1px;
@@ -15,6 +26,15 @@
   --font: "Fragment Mono", ui-monospace, "Courier New", monospace;
   --font-display: "Clash Grotesk", var(--font);
   --font-title: var(--font);
+  --noise-blend: multiply;
+}
+
+/* Screen instead of multiply, and a little less of it: lightening
+   grain on a near-black ground reads stronger than the same amount
+   darkening a near-white one. */
+html[data-theme="dark"] {
+  --noise-blend: screen;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0' intercept='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.075'/%3E%3C/svg%3E");
 }
 
 * {
@@ -28,8 +48,8 @@ body {
 
 body {
   margin: 0;
-  background: var(--bg) radial-gradient(circle, color-mix(in srgb, var(--fg) 5%, transparent) 1.4px, transparent 1.4px);
-  background-size: 10px 10px;
+  background: var(--bg) var(--noise);
+  background-blend-mode: var(--noise-blend);
   background-attachment: fixed;
   color: var(--fg);
   font-family: var(--font);
@@ -352,7 +372,7 @@ main {
 
 .detail {
   flex-direction: column;
-  border: none;
+  border: var(--border-width) solid var(--border);
   border-radius: var(--radius);
   padding: 0;
   width: min(640px, 92vw);
@@ -490,8 +510,8 @@ main {
 .detail__media {
   flex-shrink: 0;
   aspect-ratio: 16 / 9;
-  background: var(--bg) radial-gradient(circle, color-mix(in srgb, var(--fg) 5%, transparent) 1.4px, transparent 1.4px);
-  background-size: 10px 10px;
+  background: var(--bg) var(--noise);
+  background-blend-mode: var(--noise-blend);
   border-bottom: var(--border-width) solid var(--border);
 }
 
