@@ -8,12 +8,11 @@ result as a single commit on an orphan branch (default `assets-dev`).
 jsDelivr then serves it at
 `https://cdn.jsdelivr.net/gh/<owner>/<repo>@<branch>/...`.
 
-There is deliberately only one channel today: this force-pushes over
-whatever was there, with no PR and no review. A reviewed, tagged
-"prod" channel (PR into a separate `assets` branch, immutable
-`assets-vN` tags so a site can pin an exact release) is a natural
-later addition, but isn't needed until there's a production site to
-protect.
+This is the **dev** channel: it force-pushes over whatever was there,
+with no PR and no review, and is driven by `wubwub studio serve --dev`
+rather than a command of its own. The reviewed, tagged prod channel
+(PR into `assets`, immutable `assets-vN` tags) lives in `deploy.py`,
+which reuses this module's tree/git/purge helpers.
 """
 
 from __future__ import annotations
@@ -81,12 +80,21 @@ def _repo_slug(remote_url: str) -> str:
     return f"{match.group(1)}/{match.group(2)}"
 
 
-def _write_tree(albums: list[StoredAlbum], *, out_dir: Path, settings: Settings) -> int:
+def _write_tree(
+    albums: list[StoredAlbum], *, out_dir: Path, settings: Settings, version: str | None = None
+) -> int:
     """Download each album's GIF + preview into out_dir and write manifest.json.
 
     An album missing an object (e.g. deleted from MinIO after being
     rendered) is logged and skipped rather than aborting the whole
     publish -- same posture as batch.py's per-album error handling.
+
+    `version` names the immutable tag this tree will be released as
+    (prod only). The site reads it back out of the manifest and builds
+    every media URL against that tag, so published embed snippets keep
+    working forever and only manifest.json is ever cache-busted. The dev
+    channel has no tags and leaves it unset, which keeps the site on the
+    force-pushed branch ref.
     """
     s3 = s3_client(settings)
     manifest_albums = []
@@ -122,11 +130,16 @@ def _write_tree(albums: list[StoredAlbum], *, out_dir: Path, settings: Settings)
         )
         logger.debug("wrote %s + %s", album.gif_key, album.preview_key)
 
-    manifest = {
-        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "count": len(manifest_albums),
-        "albums": manifest_albums,
-    }
+    # `version` first so a release PR's diff leads with the tag, not
+    # with the album list it precedes.
+    manifest: dict[str, object] = {"version": version} if version else {}
+    manifest.update(
+        {
+            "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "count": len(manifest_albums),
+            "albums": manifest_albums,
+        }
+    )
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
     return len(manifest_albums)
 

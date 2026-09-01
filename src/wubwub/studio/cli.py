@@ -1,4 +1,4 @@
-"""Command-line interface for wubwub.studio: the `studio` group, init/upload/render/publish subcommands."""
+"""Command-line interface for wubwub.studio: the `studio` group, init/upload/render/serve/deploy subcommands."""
 
 from __future__ import annotations
 
@@ -9,9 +9,11 @@ from ..covers import CoverArtNotFound
 from .batch import render_albums
 from .config import Settings
 from .db import connect, ensure_schema
+from .deploy import deploy_assets
 from .objects import client as s3_client
 from .objects import ensure_bucket
-from .publish import PublishError, publish_assets
+from .publish import PublishError
+from .serve import DEFAULT_PORT, serve_site
 from .upload import upload_album
 
 
@@ -57,19 +59,45 @@ def _cmd_render(args: argparse.Namespace) -> int:
     return 0
 
 
-def _cmd_publish(args: argparse.Namespace) -> int:
+def _cmd_serve(args: argparse.Namespace) -> int:
     try:
-        result = publish_assets(
+        serve_site(
+            dev=args.dev,
+            port=args.port,
+            publish=not args.no_publish,
+            site=args.site,
+            remote=args.remote,
+            branch=args.branch,
+            # stdout gets the URL as soon as the socket is bound, not
+            # after the (blocking) serve loop finally exits.
+            on_start=lambda url: print(url, flush=True),
+        )
+    except (PublishError, ValueError, OSError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    return 0
+
+
+def _cmd_deploy(args: argparse.Namespace) -> int:
+    try:
+        result = deploy_assets(
             limit=args.limit,
             remote=args.remote,
             branch=args.branch,
             dry_run=args.dry_run,
             out_dir=args.output,
+            no_pr=args.no_pr,
         )
     except (PublishError, ValueError) as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    print(result.tree_dir if args.dry_run else result.base_url)
+    if result is None:
+        print("released assets already up to date", file=sys.stderr)
+        return 0
+    if args.dry_run:
+        print(result.tree_dir)
+    else:
+        print(result.pr_url or result.base_url)
     return 0
 
 
@@ -123,20 +151,42 @@ def register(sub: argparse._SubParsersAction, logging_parent: argparse.ArgumentP
     )
     render_p.set_defaults(func=_cmd_render)
 
-    publish_p = studio_sub.add_parser(
-        "publish",
-        help="push rendered GIFs to a git branch for jsDelivr CDN serving",
+    serve_p = studio_sub.add_parser(
+        "serve",
+        help="serve the site/ showcase locally (prod assets by default; --dev publishes to assets-dev first)",
         parents=[logging_parent],
     )
-    publish_p.add_argument("--limit", type=int, default=None, help="publish at most N albums")
-    publish_p.add_argument("--remote", default="origin", help="git remote to push to (default: origin)")
-    publish_p.add_argument(
-        "--branch", default="assets-dev", help="branch to force-push the asset tree to (default: assets-dev)"
+    serve_p.add_argument(
+        "--dev",
+        action="store_true",
+        help="force-push current assets to assets-dev and serve that channel",
     )
-    publish_p.add_argument(
-        "--dry-run", action="store_true", help="write the asset tree locally, don't push or purge"
+    serve_p.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"port (default: {DEFAULT_PORT})")
+    serve_p.add_argument(
+        "--no-publish", action="store_true", help="with --dev, serve assets-dev as-is without pushing"
     )
-    publish_p.add_argument(
+    serve_p.add_argument("--site", default=None, help="path to the site directory (default: repo's site/)")
+    serve_p.add_argument("--remote", default="origin", help="git remote to push to (default: origin)")
+    serve_p.add_argument(
+        "--branch", default="assets-dev", help="dev branch to force-push the asset tree to (default: assets-dev)"
+    )
+    serve_p.set_defaults(func=_cmd_serve)
+
+    deploy_p = studio_sub.add_parser(
+        "deploy",
+        help="cut a prod asset release: push a release branch off `assets` and open its PR",
+        parents=[logging_parent],
+    )
+    deploy_p.add_argument("--limit", type=int, default=None, help="release at most N albums")
+    deploy_p.add_argument("--remote", default="origin", help="git remote to push to (default: origin)")
+    deploy_p.add_argument("--branch", default="assets", help="prod asset branch (default: assets)")
+    deploy_p.add_argument(
+        "--dry-run", action="store_true", help="write the asset tree locally, don't push or open a PR"
+    )
+    deploy_p.add_argument(
         "-o", "--output", default=None, help="directory to write the asset tree to (default: a temp dir)"
     )
-    publish_p.set_defaults(func=_cmd_publish)
+    deploy_p.add_argument(
+        "--no-pr", action="store_true", help="push the release branch but leave the PR to you"
+    )
+    deploy_p.set_defaults(func=_cmd_deploy)

@@ -1,7 +1,16 @@
-// Single constant tying the site to a published asset channel. Swap to
-// an `assets` (tagged/reviewed) branch here once one exists — see
-// src/wubwub/studio/README.md.
-const BASE = "https://cdn.jsdelivr.net/gh/vupdivup/wubwub@assets-dev";
+const CDN = "https://cdn.jsdelivr.net/gh/vupdivup/wubwub";
+// Two published channels: reviewed prod (`assets`, one PR per release)
+// and the force-pushed dev branch. Picked at runtime so the same static
+// page serves both — `wubwub studio serve --dev` opens `?channel=dev`.
+const CHANNELS = { prod: "assets", dev: "assets-dev" };
+const channel = new URLSearchParams(location.search).get("channel") === "dev" ? "dev" : "prod";
+const MANIFEST_URL = `${CDN}@${CHANNELS[channel]}/manifest.json`;
+
+// Media base comes from the manifest, not from the channel: a prod
+// manifest names the immutable `assets-vN` tag it was released as, so
+// copied embed snippets keep working forever and only manifest.json
+// ever needs a CDN purge. Dev has no tags and stays on its branch.
+let BASE = `${CDN}@${CHANNELS[channel]}`;
 
 import Fuse from "https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/+esm";
 
@@ -34,6 +43,7 @@ let openerDeactivate = null;
 
 wireThemeToggle();
 wireIntro();
+document.getElementById("channel-badge").hidden = channel !== "dev";
 yearEl.textContent = new Date().getFullYear();
 init();
 
@@ -62,10 +72,11 @@ function wireIntro() {
 async function init() {
   let albums = [];
   try {
-    const res = await fetch("./data/manifest.json");
+    const res = await fetch(MANIFEST_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const manifest = await res.json();
     albums = manifest.albums ?? [];
+    if (manifest.version) BASE = `${CDN}@${manifest.version}`;
   } catch (err) {
     countEl.hidden = false;
     countEl.textContent = "Failed to load manifest.";

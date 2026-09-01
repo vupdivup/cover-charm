@@ -22,12 +22,16 @@ subpackages behind one `wubwub` CLI (`wubwub <group> <command>`):
 - `studio` (`src/wubwub/studio/`) fetches a cover via `wubwub.covers`
   and persists it: image to MinIO/S3, metadata + object URL to
   Postgres. It can also batch-render covers into GIFs (`batch.py`, via
-  `wubwub.media`) and `publish` them by force-pushing to the
-  `assets-dev` git branch, served over jsDelivr for the `site/`
-  showcase. See `src/wubwub/studio/README.md` for full usage.
+  `wubwub.media`) and publish them over jsDelivr for the `site/`
+  showcase through two channels: dev (`serve --dev`, force-pushes
+  `publish.py`'s orphan `assets-dev` branch) and prod (`deploy`, opens a
+  PR onto `assets`, tagged `assets-vN` by
+  `.github/workflows/tag-assets.yml` on merge). `serve` runs the `site/`
+  page against either. See `src/wubwub/studio/README.md` for full usage.
 - `site/` is a static, no-build showcase page (plain HTML/CSS/JS, not
-  a Python package) that browses `assets-dev` GIFs from a checked-in
-  copy of the manifest at `site/data/manifest.json`. See
+  a Python package) that fetches its manifest from the CDN at runtime
+  (prod `assets` branch by default, `assets-dev` with `?channel=dev`)
+  and its media from the `assets-vN` tag that manifest names. See
   `site/README.md`.
 
 Each subpackage's CLI group lives in its own `cli.py`, registered onto
