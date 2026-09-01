@@ -102,12 +102,6 @@ in the same session — ask again, or wait, each time. Committing does
 not require push to "complete" the task; stop after the commit and
 report it, don't chain a push onto it on your own judgment.
 
-When starting work on a **new** worktree branch (nothing committed to
-it yet), rebase it onto `origin/master` first so it starts from the
-latest master. If the branch already has commits on it, don't rebase
-automatically — ask first, since a rebase there rewrites history the
-user may be relying on.
-
 ## External services
 
 - **MusicBrainz + Cover Art Archive** — uncredentialed, rate-limited
