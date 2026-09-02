@@ -41,12 +41,17 @@ html[data-theme="dark"] {
   box-sizing: border-box;
 }
 
-html,
-body {
+html {
   height: 100%;
 }
 
+/* min-height, not height: `height: 100%` clamps body's box to exactly
+   one viewport, and a sticky element can only stick inside its
+   containing block -- so the header unstuck and scrolled away with the
+   content once body's bottom edge passed. min-height keeps the
+   full-viewport floor for short pages without capping the box. */
 body {
+  min-height: 100%;
   margin: 0;
   background: var(--bg) var(--noise);
   background-blend-mode: var(--noise-blend);
