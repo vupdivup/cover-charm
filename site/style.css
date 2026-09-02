@@ -207,10 +207,24 @@ body {
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.icon-btn:hover,
-.icon-btn:focus-visible {
+/* Hover states sit behind `@media (hover: hover)`: a tap on a touch
+   screen leaves :hover latched on the control until the next tap
+   elsewhere, so the tapped button stayed accent-coloured long after
+   the tap. :active carries the press feedback instead -- it holds only
+   while the finger is down, so a tap flashes the accent and releases
+   it. Coarse pointers get :active plus :focus-visible, which a tap
+   never triggers. */
+.icon-btn:focus-visible,
+.icon-btn:active {
   color: var(--accent-fg);
   background: var(--accent);
+}
+
+@media (hover: hover) {
+  .icon-btn:hover {
+    color: var(--accent-fg);
+    background: var(--accent);
+  }
 }
 
 /* Show sun in dark mode (click to go light), moon in light/system mode. */
@@ -273,9 +287,15 @@ main {
   text-underline-offset: 2px;
 }
 
-.site-footer a:hover,
-.site-footer a:focus-visible {
+.site-footer a:focus-visible,
+.site-footer a:active {
   color: var(--fg);
+}
+
+@media (hover: hover) {
+  .site-footer a:hover {
+    color: var(--fg);
+  }
 }
 
 .site-footer code {
@@ -332,10 +352,17 @@ main {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card:hover,
-.card:focus-visible {
+.card:focus-visible,
+.card:active {
   transform: translateY(-3px);
   box-shadow: var(--shadow);
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
 }
 
 .card__media {
@@ -508,8 +535,14 @@ html:has(dialog[open]) {
   font-weight: 600;
 }
 
-.intro__dismiss:hover {
+.intro__dismiss:active {
   background: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+@media (hover: hover) {
+  .intro__dismiss:hover {
+    background: color-mix(in srgb, var(--accent) 85%, black);
+  }
 }
 
 .detail__close-form {
@@ -534,9 +567,15 @@ html:has(dialog[open]) {
   transition: color 0.15s ease;
 }
 
-.detail__close:hover,
-.detail__close:focus-visible {
+.detail__close:focus-visible,
+.detail__close:active {
   color: var(--accent);
+}
+
+@media (hover: hover) {
+  .detail__close:hover {
+    color: var(--accent);
+  }
 }
 
 .detail__media {
