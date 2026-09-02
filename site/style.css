@@ -27,6 +27,19 @@
   --font-display: "Clash Grotesk", var(--font);
   --font-title: var(--font);
   --noise-blend: multiply;
+
+  /* Press/hover shade for a control that is already accent-filled, so
+     the darkened accent is written once instead of per-control. */
+  --accent-strong: color-mix(in srgb, var(--accent) 85%, black);
+
+  /* One timing language for the two things on the page that move.
+     --motion is the card's lift; --motion-lg the dialog, which travels
+     further and so reads better slightly slower. Colour states -- every
+     hover, press, focus and selection -- take neither: they snap. Both
+     are full `<duration> <easing>` values so they drop straight into a
+     `transition` shorthand list. */
+  --motion: 0.15s ease;
+  --motion-lg: 0.18s ease;
 }
 
 /* Screen instead of multiply, and a little less of it: lightening
@@ -90,6 +103,12 @@ body {
   outline: 2px solid var(--border);
   outline-offset: -2px;
 }
+
+/* One interaction language, and it is a hard one: every colour state a
+   control takes -- icon-button hover, tab selection, press, focus --
+   snaps with no transition, matching the flat two-colour palette and
+   the 0px radius. Motion is reserved for the two things that actually
+   move: the card's lift and the dialog's entrance, below. */
 
 .icon-sprite {
   position: absolute;
@@ -198,7 +217,6 @@ body {
   color: var(--fg);
   flex-shrink: 0;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
 }
 
 /* Hover states sit behind `@media (hover: hover)`: a tap on a touch
@@ -341,7 +359,9 @@ main {
   content-visibility: auto;
   contain-intrinsic-size: 260px;
 
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  /* The one control that moves rather than just recolouring, so it is
+     also the one that gets a transition. */
+  transition: transform var(--motion), box-shadow var(--motion);
 }
 
 .card:focus-visible,
@@ -399,15 +419,6 @@ main {
   display: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .card {
-    transition: none;
-  }
-  .card:hover {
-    transform: none;
-  }
-}
-
 /* ---------- dialog ---------- */
 
 /* A modal <dialog> makes the page behind it inert to clicks but not to
@@ -435,7 +446,7 @@ html:has(dialog[open]) {
 
   opacity: 0;
   transform: translateY(12px) scale(0.98);
-  transition: opacity 0.18s ease, transform 0.18s ease, overlay 0.18s allow-discrete, display 0.18s allow-discrete;
+  transition: opacity var(--motion-lg), transform var(--motion-lg), overlay 0.18s allow-discrete, display 0.18s allow-discrete;
 }
 
 .detail[open] {
@@ -455,14 +466,25 @@ html:has(dialog[open]) {
   background: rgb(0 0 0 / 0.6);
   backdrop-filter: blur(4px);
   opacity: 0;
-  transition: opacity 0.18s ease;
+  transition: opacity var(--motion-lg);
 }
 
 .detail[open]::backdrop {
   opacity: 1;
 }
 
+/* Drop the travel, keep the colour fades -- reduced motion asks for no
+   movement, not for instant state changes. The card kept its lift under
+   the old rule because only :hover was overridden, so a focus or a tap
+   still moved it. */
 @media (prefers-reduced-motion: reduce) {
+  .card,
+  .card:hover,
+  .card:focus-visible,
+  .card:active {
+    transform: none;
+  }
+
   .detail,
   .detail::backdrop {
     transition: none;
@@ -517,23 +539,33 @@ html:has(dialog[open]) {
 }
 
 .intro__dismiss {
+  /* Spelled out like every other control (the UA button styling it
+     used to inherit ignored --border-width and --radius): reset
+     appearance, then borrow the same border, radius and font. */
   display: block;
   width: 100%;
+  appearance: none;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
   text-align: center;
   padding: 0.6rem;
   background: var(--accent);
-  border-color: var(--accent);
   color: var(--accent-fg);
+  font: inherit;
   font-weight: 600;
+  cursor: pointer;
 }
 
+/* Already accent-filled, so it darkens instead of flashing accent --
+   but on the same trio of states as every other control. */
+.intro__dismiss:focus-visible,
 .intro__dismiss:active {
-  background: color-mix(in srgb, var(--accent) 85%, black);
+  background: var(--accent-strong);
 }
 
 @media (hover: hover) {
   .intro__dismiss:hover {
-    background: color-mix(in srgb, var(--accent) 85%, black);
+    background: var(--accent-strong);
   }
 }
 
@@ -556,7 +588,6 @@ html:has(dialog[open]) {
   background: none;
   color: var(--fg);
   cursor: pointer;
-  transition: color 0.15s ease;
 }
 
 .detail__close:focus-visible,
@@ -629,9 +660,14 @@ html:has(dialog[open]) {
   cursor: pointer;
 }
 
+/* No hover or press state, deliberately: in a tablist the accent fill
+   *is* the selected state, and any pointer state near it read as a
+   second selection. The tab's feedback is the selection itself, which
+   fades in over --motion like every other accent change on the page --
+   so it matches the icon buttons in timing without competing with them
+   in meaning. Keyboard focus is covered by the shared inset outline. */
 .snippet__tabs button[aria-selected="true"] {
   background: var(--accent);
-  border-color: var(--accent);
   color: var(--accent-fg);
 }
 
@@ -677,9 +713,11 @@ html:has(dialog[open]) {
   display: block;
 }
 
+/* Filled states keep the --border edge rather than taking an accent
+   one, so a filled control stays the same box as an empty one --
+   same rule as .icon-btn:hover and the selected tab. */
 .copy-btn.copied {
   background: var(--accent);
-  border-color: var(--accent);
   color: var(--accent-fg);
 }
 
