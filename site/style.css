@@ -438,7 +438,12 @@ html:has(dialog[open]) {
   border-radius: var(--radius);
   padding: 0;
   width: min(640px, 92vw);
-  max-height: 88vh;
+  /* svh, not vh: with a retracting browser toolbar `vh` is the *large*
+     viewport, so 88vh measured against height the chrome was covering
+     and clipped the dialog's ends while the toolbar was up. svh is the
+     always-visible height, and it's the same unit the media cap uses so
+     the two stay in proportion. */
+  max-height: 88svh;
   background: var(--bg-elevated);
   color: var(--fg);
   box-shadow: var(--shadow-lg);
@@ -604,6 +609,14 @@ html:has(dialog[open]) {
 .detail__media {
   flex-shrink: 0;
   aspect-ratio: 16 / 9;
+  /* On a short viewport -- a tablet held landscape, mostly -- 16:9 at
+     the dialog's full width ate nearly all of the 88vh box and left the
+     body scrolling in a sliver. Cap the media at a share of the
+     viewport instead; the box goes squarer than 16:9 and the cover
+     letterboxes inside it (object-fit: contain), which costs a little
+     art size but keeps title, tabs and snippet visible without a
+     scroll. No effect where there's height to spare. */
+  max-height: 42svh;
   background: var(--bg) var(--noise);
   background-blend-mode: var(--noise-blend);
   border-bottom: var(--border-width) solid var(--border);
