@@ -84,6 +84,13 @@ html {
 body {
   min-height: 100%;
   margin: 0;
+  /* Column flex with main growing keeps the footer on the bottom edge
+     when a filtered grid is too short to fill the viewport -- in normal
+     flow it rode up under the last row and left bare canvas beneath
+     it. Tall pages are unaffected: main is already past its flex
+     basis, so there is nothing to grow into. */
+  display: flex;
+  flex-direction: column;
   background: transparent;
   color: var(--fg);
   font-family: var(--font);
@@ -270,6 +277,7 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
 /* ---------- grid ---------- */
 
 main {
+  flex: 1;
   padding: 1.5rem clamp(1rem, 4vw, 3rem) 4rem;
 }
 
