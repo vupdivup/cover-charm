@@ -32,14 +32,11 @@
      the darkened accent is written once instead of per-control. */
   --accent-strong: color-mix(in srgb, var(--accent) 85%, black);
 
-  /* One timing language for the two things on the page that move.
-     --motion is the card's lift; --motion-lg the dialog, which travels
-     further and so reads better slightly slower. Colour states -- every
-     hover, press, focus and selection -- take neither: they snap. Both
-     are full `<duration> <easing>` values so they drop straight into a
-     `transition` shorthand list. */
+  /* One timing for the one thing on the page that moves: the card's
+     lift. Everything else snaps -- colour states, and the dialog, which
+     cuts straight in. A full `<duration> <easing>` value so it drops
+     straight into a `transition` shorthand list. */
   --motion: 0.15s ease;
-  --motion-lg: 0.18s ease;
 }
 
 /* Screen instead of multiply, and a little less of it: lightening
@@ -105,7 +102,7 @@ body {
    transparent and a thick inset outline takes over, so focus never
    nudges layout (outline sits outside the box model) or doubles up
    with a control's own border. */
-:is(.icon-btn, .search input, .card, .detail__close, .snippet__tabs button, .copy-btn, .site-footer a, .detail__body, .snippet__panel pre):focus-visible {
+:is(.icon-btn, .search input, .search__clear, .card, .detail__close, .snippet__tabs button, .copy-btn, .site-footer a, .detail__body, .snippet__panel pre):focus-visible {
   border-color: transparent;
   outline: 2px solid var(--border);
   outline-offset: -2px;
@@ -114,8 +111,8 @@ body {
 /* One interaction language, and it is a hard one: every colour state a
    control takes -- icon-button hover, tab selection, press, focus --
    snaps with no transition, matching the flat two-colour palette and
-   the 0px radius. Motion is reserved for the two things that actually
-   move: the card's lift and the dialog's entrance, below. */
+   the 0px radius. So does the dialog, which cuts in. Motion is reserved
+   for the one thing that actually moves: the card's lift, below. */
 
 .icon-sprite {
   position: absolute;
@@ -279,7 +276,7 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
 
 .search input {
   width: 100%;
-  padding: 0.6rem 0.75rem 0.6rem 3.25rem;
+  padding: 0.6rem 2.5rem 0.6rem 3.25rem;
   border-radius: var(--radius);
   border: var(--border-width) solid var(--border);
   background: var(--bg-elevated);
@@ -288,8 +285,40 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
   font-size: 0.9rem;
 }
 
+/* The UA's own clear button is drawn from a mask the page can't
+   recolour -- Android Chrome tints it with the system accent, so a blue
+   X landed in a two-colour header. Hide it and mirror the search icon
+   on the trailing edge with the sprite's X instead, so both ends of the
+   field come from the same icon set and follow --fg-muted. */
 .search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search__clear {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--fg-muted);
   cursor: pointer;
+}
+
+.search__clear:hover,
+.search__clear:active {
+  color: var(--fg);
+}
+
+/* Nothing to clear on an empty field, and `:placeholder-shown` tracks
+   that without JS having to toggle a class on every keystroke. */
+.search input:placeholder-shown ~ .search__clear {
+  display: none;
 }
 
 /* ---------- grid ---------- */
@@ -474,34 +503,20 @@ html:has(dialog[open]) {
   color: var(--fg);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
-
-  opacity: 0;
-  transform: translateY(12px) scale(0.98);
-  transition: opacity var(--motion-lg), transform var(--motion-lg), overlay 0.18s allow-discrete, display 0.18s allow-discrete;
 }
 
+/* The dialog cuts in, it doesn't ease in: no fade, no rise, no scale.
+   A softening entrance was the one thing on the page still apologising
+   for appearing, which sat badly against the flat palette, the 0px
+   radius and the hard-snapping colour states. Cutting it also drops the
+   `overlay`/`display` allow-discrete plumbing the fade-out needed. */
 .detail[open] {
   display: flex;
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-@starting-style {
-  .detail[open] {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
 }
 
 .detail::backdrop {
   background: rgb(0 0 0 / 0.6);
   backdrop-filter: blur(4px);
-  opacity: 0;
-  transition: opacity var(--motion-lg);
-}
-
-.detail[open]::backdrop {
-  opacity: 1;
 }
 
 /* Drop the travel, keep the colour fades -- reduced motion asks for no
@@ -514,11 +529,6 @@ html:has(dialog[open]) {
   .card:focus-visible,
   .card:active {
     transform: none;
-  }
-
-  .detail,
-  .detail::backdrop {
-    transition: none;
   }
 }
 
