@@ -31,6 +31,7 @@ const snippetTabs = document.querySelectorAll(".snippet__tabs button");
 const themeToggle = document.getElementById("theme-toggle");
 const yearEl = document.getElementById("year");
 const intro = document.getElementById("intro");
+const introOpen = document.getElementById("intro-open");
 
 // Cap how many cards keep an animated GIF loaded at once; older
 // hovers revert to their static preview so 500 items can't pin
@@ -43,10 +44,44 @@ let currentFormat = "markdown";
 let openerCard = null;
 let openerDeactivate = null;
 
+wirePressState();
 wireThemeToggle();
 wireIntro();
 yearEl.textContent = new Date().getFullYear();
 init();
+
+// Controls whose press feedback is a colour flash. :active is supposed
+// to carry it, but a mobile engine defers :active while it decides
+// whether the touch is a scroll, so a quick tap ends before the state
+// ever paints -- and with the page's colour states snapping (no
+// transition, by design) there is nothing left to trail behind it.
+// `.pressed` mirrors each control's :active declarations in style.css.
+const PRESS_SELECTOR = ".icon-btn, .intro__dismiss, .detail__close, .search__clear";
+const PRESS_MS = 120;
+
+function wirePressState() {
+  document.addEventListener("pointerdown", (event) => {
+    // Mouse :active works as advertised; leave the desktop untouched.
+    if (event.pointerType === "mouse") return;
+
+    const control = event.target.closest(PRESS_SELECTOR);
+    if (!control) return;
+
+    control.classList.add("pressed");
+    const start = performance.now();
+
+    // Released on the window, not the control: a finger that drifts off
+    // the button before lifting never fires pointerup on it, which
+    // would leave the state stuck on. Held to a minimum beat so the
+    // flash is visible even on a tap shorter than PRESS_MS.
+    const release = () => {
+      const held = performance.now() - start;
+      setTimeout(() => control.classList.remove("pressed"), Math.max(0, PRESS_MS - held));
+    };
+    addEventListener("pointerup", release, { once: true });
+    addEventListener("pointercancel", release, { once: true });
+  });
+}
 
 function wireThemeToggle() {
   themeToggle.addEventListener("click", () => {
@@ -64,6 +99,11 @@ function wireIntro() {
   intro.addEventListener("close", () => {
     localStorage.setItem("introSeen", "1");
   });
+
+  // The intro auto-opens once, but it's also the only place the page
+  // explains itself -- the header button lets a returning visitor get
+  // it back instead of clearing storage.
+  introOpen.addEventListener("click", () => intro.showModal());
 
   if (!localStorage.getItem("introSeen")) {
     intro.showModal();
