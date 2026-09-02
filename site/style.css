@@ -114,8 +114,11 @@ body {
 /* One interaction language, and it is a hard one: every colour state a
    control takes -- icon-button hover, tab selection, press, focus --
    snaps with no transition, matching the flat two-colour palette and
-   the 0px radius. So does the dialog, which cuts in. Motion is reserved
-   for the one thing that actually moves: the card's lift, below. */
+   the 0px radius. Motion is reserved for the two things that travel:
+   the card's lift and the dialog's entrance, below. The dialog is the
+   deliberate exception to the hard language -- a control recolouring in
+   place can snap, but a panel arriving over the whole page reads as
+   abrupt without one. */
 
 .icon-sprite {
   position: absolute;
