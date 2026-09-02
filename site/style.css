@@ -602,6 +602,7 @@ html:has(dialog[open]) {
 }
 
 .detail__media {
+  position: relative;
   flex-shrink: 0;
   aspect-ratio: 16 / 9;
   background: var(--bg) var(--noise);
@@ -614,6 +615,15 @@ html:has(dialog[open]) {
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+/* Sits over the media rather than in the body: the snippet block below
+   is the embed path, this is the "just give me the file" path, so it
+   belongs on the artwork it saves and stays out of the tab/copy row. */
+.detail__download {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
 }
 
 .detail__body {
@@ -705,7 +715,7 @@ html:has(dialog[open]) {
   display: none;
 }
 
-.copy-btn.copied .icon-copy {
+.copy-btn.copied :is(.icon-copy, .icon-download) {
   display: none;
 }
 
