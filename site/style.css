@@ -53,12 +53,26 @@ html {
 body {
   min-height: 100%;
   margin: 0;
-  background: var(--bg) var(--noise);
-  background-blend-mode: var(--noise-blend);
-  background-attachment: fixed;
+  background: var(--bg);
   color: var(--fg);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
+}
+
+/* The grain used to ride on `background-attachment: fixed`, which the
+   compositor cannot scroll with the content layer -- it has to repaint
+   the whole viewport every frame, and on mobile that surfaced stale
+   tiles (the footer's pixels showing under the cards) in the strip
+   exposed at the bottom as the URL bar collapses. A fixed pseudo-element
+   paints the same non-scrolling grain as one cheap composited layer. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--bg) var(--noise);
+  background-blend-mode: var(--noise-blend);
 }
 
 .muted {
