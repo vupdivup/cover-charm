@@ -106,6 +106,32 @@ in the same session — ask again, or wait, each time. Committing does
 not require push to "complete" the task; stop after the commit and
 report it, don't chain a push onto it on your own judgment.
 
+## Issues
+
+Issue titles follow the same conventional-commit form as commits
+(`feat(site): ...`), so the type is already in the title — don't apply
+`bug`/`enhancement` labels. Do apply the `area:` label matching the
+scope (`area: site`, `area: covers`, `area: media`, `area: studio`),
+plus `accessibility` where it fits, since neither is derivable from a
+filterable field otherwise.
+
+A body states the problem and adds **notes**: the file and line where
+the behavior lives, constraints already encoded there, prior decisions
+worth not undoing, open questions. It does **not** prescribe a
+solution. A written-out proposal tends to get implemented as-is
+without being re-examined against the code at implementation time,
+which biases the fix toward whatever was guessed when the issue was
+filed. Leave the design to the person picking the issue up; give them
+what they'd otherwise have to rediscover.
+
+Before writing the notes, read the code the report touches and do a
+short root cause analysis — enough to say what the mechanism is, or to
+name the candidates and how to tell them apart. The notes are only
+worth having if they're grounded in what the code actually does; a
+reported symptom is often not where the cause lives. Write findings as
+findings and guesses as guesses, and keep an unverified cause an open
+question rather than stating it as fact.
+
 ## External services
 
 - **MusicBrainz + Cover Art Archive** — uncredentialed, rate-limited
