@@ -18,6 +18,7 @@ const grid = document.getElementById("grid");
 const empty = document.getElementById("empty");
 const countEl = document.getElementById("count");
 const searchInput = document.getElementById("search");
+const searchClear = document.getElementById("search-clear");
 
 const detail = document.getElementById("detail");
 const detailImg = document.getElementById("detail-img");
@@ -229,6 +230,16 @@ function wireSearch(albums, fuse, cards) {
     if (event.key !== "Enter") return;
     commit();
     if (matchMedia("(pointer: coarse)").matches) searchInput.blur();
+  });
+
+  // Replaces the UA's unstylable search-cancel button (see style.css), so
+  // it clears immediately rather than through the input debounce. Focus
+  // goes back to the field: the button hides itself once empty, and
+  // clearing usually means retyping.
+  searchClear.addEventListener("click", () => {
+    searchInput.value = "";
+    commit();
+    searchInput.focus();
   });
 }
 

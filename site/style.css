@@ -95,7 +95,7 @@ body {
    transparent and a thick inset outline takes over, so focus never
    nudges layout (outline sits outside the box model) or doubles up
    with a control's own border. */
-:is(.icon-btn, .search input, .card, .detail__close, .snippet__tabs button, .copy-btn, .site-footer a, .detail__body, .snippet__panel pre):focus-visible {
+:is(.icon-btn, .search input, .search__clear, .card, .detail__close, .snippet__tabs button, .copy-btn, .site-footer a, .detail__body, .snippet__panel pre):focus-visible {
   border-color: transparent;
   outline: 2px solid var(--border);
   outline-offset: -2px;
@@ -269,7 +269,7 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
 
 .search input {
   width: 100%;
-  padding: 0.6rem 0.75rem 0.6rem 3.25rem;
+  padding: 0.6rem 2.5rem 0.6rem 3.25rem;
   border-radius: var(--radius);
   border: var(--border-width) solid var(--border);
   background: var(--bg-elevated);
@@ -278,8 +278,40 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
   font-size: 0.9rem;
 }
 
+/* The UA's own clear button is drawn from a mask the page can't
+   recolour -- Android Chrome tints it with the system accent, so a blue
+   X landed in a two-colour header. Hide it and mirror the search icon
+   on the trailing edge with the sprite's X instead, so both ends of the
+   field come from the same icon set and follow --fg-muted. */
 .search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search__clear {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--fg-muted);
   cursor: pointer;
+}
+
+.search__clear:hover,
+.search__clear:active {
+  color: var(--fg);
+}
+
+/* Nothing to clear on an empty field, and `:placeholder-shown` tracks
+   that without JS having to toggle a class on every keystroke. */
+.search input:placeholder-shown ~ .search__clear {
+  display: none;
 }
 
 /* ---------- grid ---------- */
