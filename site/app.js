@@ -23,6 +23,7 @@ const detail = document.getElementById("detail");
 const detailImg = document.getElementById("detail-img");
 const detailTitle = document.getElementById("detail-title");
 const detailSub = document.getElementById("detail-sub");
+const detailDownload = document.getElementById("detail-download");
 const snippetCode = document.getElementById("snippet-code");
 const snippetCopy = document.getElementById("snippet-copy");
 const snippetTabs = document.querySelectorAll(".snippet__tabs button");
@@ -243,6 +244,7 @@ function wireDialog() {
   }
 
   snippetCopy.addEventListener("click", copySnippet);
+  detailDownload.addEventListener("click", downloadGif);
 
   // The card that opened the dialog never sees `pointerleave` while the
   // modal covers it, so stop its GIF on close unless the pointer really
@@ -305,10 +307,53 @@ async function copySnippet() {
     textarea.remove();
   }
 
-  snippetCopy.setAttribute("aria-label", "Copied");
-  snippetCopy.classList.add("copied");
+  flashDone(snippetCopy, "Copied", "Copy snippet");
+}
+
+// Swap a control to its check icon for a beat, then back.
+function flashDone(button, doneLabel, idleLabel) {
+  button.setAttribute("aria-label", doneLabel);
+  button.classList.add("copied");
   setTimeout(() => {
-    snippetCopy.setAttribute("aria-label", "Copy snippet");
-    snippetCopy.classList.remove("copied");
+    button.setAttribute("aria-label", idleLabel);
+    button.classList.remove("copied");
   }, 1200);
+}
+
+async function downloadGif() {
+  if (!currentAlbum) return;
+  const { artist, title, gifUrl } = currentAlbum;
+  const filename = `${slug(artist)}-${slug(title)}.gif`;
+
+  try {
+    // The media is cross-origin (jsDelivr), and `download` on a
+    // cross-origin <a> is ignored -- the browser navigates to the GIF
+    // instead of saving it. Fetching to a same-origin blob URL first
+    // is what makes the attribute stick, and jsDelivr sends CORS
+    // headers, so the fetch itself is allowed.
+    const response = await fetch(gifUrl);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const url = URL.createObjectURL(await response.blob());
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    flashDone(detailDownload, "Downloaded", "Download GIF");
+  } catch {
+    // Blocked fetch or offline: hand the file to the browser directly.
+    // Loses the filename, but still gets the user the GIF.
+    window.open(gifUrl, "_blank", "noopener");
+  }
+}
+
+function slug(text) {
+  return text
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "cover";
 }

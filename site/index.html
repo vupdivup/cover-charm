@@ -49,6 +49,9 @@
       <symbol id="icon-copy" viewBox="0 0 256 256" fill="currentColor">
         <path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/>
       </symbol>
+      <symbol id="icon-download" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M224,152v56a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V152a8,8,0,0,1,16,0v56H208V152a8,8,0,0,1,16,0ZM82.34,141.66a8,8,0,0,1,11.32-11.32L120,156.69V40a8,8,0,0,1,16,0V156.69l26.34-26.35a8,8,0,0,1,11.32,11.32l-40,40a8,8,0,0,1-11.32,0Z"/>
+      </symbol>
       <symbol id="icon-x" viewBox="0 0 256 256" fill="currentColor">
         <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/>
       </symbol>
@@ -136,6 +139,10 @@
     </form>
     <div class="detail__media">
       <img id="detail-img" alt="" />
+      <button id="detail-download" type="button" class="copy-btn icon-btn detail__download" aria-label="Download GIF">
+        <svg class="icon-download icon" width="16" height="16" aria-hidden="true"><use href="#icon-download"/></svg>
+        <svg class="icon-check icon" width="16" height="16" aria-hidden="true"><use href="#icon-check"/></svg>
+      </button>
     </div>
     <div class="detail__body">
       <h2 id="detail-title"></h2>
