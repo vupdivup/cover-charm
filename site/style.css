@@ -43,6 +43,12 @@ html[data-theme="dark"] {
 
 html {
   height: 100%;
+
+  /* Kill the blue tap flash mobile WebKit/Chromium paints over any
+     tapped element -- the page already shows press state through its
+     own hover/active styling, and the default overlay fights the
+     flat two-colour palette. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* min-height, not height: `height: 100%` clamps body's box to exactly
