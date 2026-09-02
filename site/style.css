@@ -178,12 +178,6 @@ body {
   justify-content: center;
   color: var(--fg-muted);
   pointer-events: none;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.search:has(input:focus-visible) .search__icon {
-  background: var(--accent);
-  color: var(--accent-fg);
 }
 
 .header-actions {
@@ -255,13 +249,6 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
   cursor: pointer;
 }
 
-.search input:focus-visible {
-  /* Flush (not inset) so the outline lines up exactly with the icon
-     box's own flush edges instead of sitting 2px inside them —
-     otherwise the two read as disconnected rectangles. */
-  outline-offset: 0;
-}
-
 /* ---------- grid ---------- */
 
 main {
@@ -281,8 +268,13 @@ main {
   margin: 0.3rem 0;
 }
 
+/* Links carry the accent at rest, then go to plain ink on
+   interaction -- the inverse of the rest-neutral/accent-on-touch
+   pattern the buttons use. Inverted on purpose: these are the only
+   links in the page's chrome, so marking them by colour at rest is
+   worth more than matching the button convention. */
 .site-footer a {
-  color: inherit;
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -648,7 +640,11 @@ html:has(dialog[open]) {
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
-  border-left: 3px solid var(--accent);
+  /* Full ink border, matching every other container. The panel used
+     to carry only a 3px accent left edge, which is the blockquote
+     idiom -- it read as an annotation on the text above rather than
+     a box of its own. */
+  border: var(--border-width) solid var(--border);
   border-radius: var(--radius);
   background: var(--bg);
   padding: 0.7rem 0.8rem;
