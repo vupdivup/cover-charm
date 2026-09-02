@@ -126,8 +126,18 @@ body {
   display: grid;
   /* 3-col grid, not flex space-between: search sits in the true
      center column instead of drifting toward whichever side (title
-     vs actions) is wider. */
-  grid-template-columns: 1fr minmax(0, 520px) 1fr;
+     vs actions) is wider.
+
+     The centre track is fluid, not a flat 520px: between the 640px
+     flex fallback and a laptop, a fixed 520px left the side columns
+     too narrow -- the count line under the title wrapped, and once the
+     title hit its min-content width the side track stopped shrinking,
+     overflowed the grid and pushed the search off centre. 44vw keeps
+     the side columns in proportion through the tablet range while
+     leaving the input wide enough for its placeholder, and still
+     reaches the 520px cap by ~1180px, so the laptop size is
+     unchanged. */
+  grid-template-columns: 1fr minmax(0, clamp(260px, 44vw, 520px)) 1fr;
   align-items: center;
   gap: 1rem;
   padding: 1.25rem clamp(1rem, 4vw, 3rem);
@@ -160,11 +170,19 @@ body {
   width: 100%;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   /* Icons sit next to the title on the first line; search drops to
      its own full-width line below, instead of wrapping after the
      icons in DOM order. The 3-col centering grid only makes sense at
-     desktop widths, so fall back to wrapping flex here. */
+     desktop widths, so fall back to wrapping flex here.
+
+     760px, not 640: between the two, the grid's side columns are down
+     to roughly the width of the title itself, so the search is
+     squeezed from both sides -- and because the columns are equal
+     while the title is wider than the icon pair, the leftover gap is
+     visibly bigger on the right. Stacking is the layout that band
+     wants. Above 760px tablet portrait keeps the one-line header,
+     where the same gap difference reads as ordinary asymmetry. */
   .site-header {
     display: flex;
     flex-wrap: wrap;
