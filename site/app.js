@@ -206,16 +206,29 @@ function setHot(img, gifUrl) {
 
 function wireSearch(albums, fuse, cards) {
   let debounceHandle;
-  searchInput.addEventListener("input", () => {
+
+  function commit() {
     clearTimeout(debounceHandle);
     const value = searchInput.value;
-    debounceHandle = setTimeout(() => {
-      applyFilter(value, albums, fuse, cards);
-      const params = new URLSearchParams(location.search);
-      if (value) params.set("q", value);
-      else params.delete("q");
-      history.replaceState(null, "", `${location.pathname}${params.size ? `?${params}` : ""}`);
-    }, 120);
+    applyFilter(value, albums, fuse, cards);
+    const params = new URLSearchParams(location.search);
+    if (value) params.set("q", value);
+    else params.delete("q");
+    history.replaceState(null, "", `${location.pathname}${params.size ? `?${params}` : ""}`);
+  }
+
+  searchInput.addEventListener("input", () => {
+    clearTimeout(debounceHandle);
+    debounceHandle = setTimeout(commit, 120);
+  });
+
+  // Enter has nothing to submit (filtering is live), so on touch it means
+  // "done typing": blur to drop the virtual keyboard off the grid. On a
+  // mouse/desktop pointer blurring only costs the caret, so keep focus.
+  searchInput.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    commit();
+    if (matchMedia("(pointer: coarse)").matches) searchInput.blur();
   });
 }
 
