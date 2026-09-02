@@ -32,14 +32,11 @@
      the darkened accent is written once instead of per-control. */
   --accent-strong: color-mix(in srgb, var(--accent) 85%, black);
 
-  /* One timing language for the two things on the page that move.
-     --motion is the card's lift; --motion-lg the dialog, which travels
-     further and so reads better slightly slower. Colour states -- every
-     hover, press, focus and selection -- take neither: they snap. Both
-     are full `<duration> <easing>` values so they drop straight into a
-     `transition` shorthand list. */
+  /* One timing for the one thing on the page that moves: the card's
+     lift. Everything else snaps -- colour states, and the dialog, which
+     cuts straight in. A full `<duration> <easing>` value so it drops
+     straight into a `transition` shorthand list. */
   --motion: 0.15s ease;
-  --motion-lg: 0.18s ease;
 }
 
 /* Screen instead of multiply, and a little less of it: lightening
@@ -107,8 +104,8 @@ body {
 /* One interaction language, and it is a hard one: every colour state a
    control takes -- icon-button hover, tab selection, press, focus --
    snaps with no transition, matching the flat two-colour palette and
-   the 0px radius. Motion is reserved for the two things that actually
-   move: the card's lift and the dialog's entrance, below. */
+   the 0px radius. So does the dialog, which cuts in. Motion is reserved
+   for the one thing that actually moves: the card's lift, below. */
 
 .icon-sprite {
   position: absolute;
@@ -466,34 +463,20 @@ html:has(dialog[open]) {
   color: var(--fg);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
-
-  opacity: 0;
-  transform: translateY(12px) scale(0.98);
-  transition: opacity var(--motion-lg), transform var(--motion-lg), overlay 0.18s allow-discrete, display 0.18s allow-discrete;
 }
 
+/* The dialog cuts in, it doesn't ease in: no fade, no rise, no scale.
+   A softening entrance was the one thing on the page still apologising
+   for appearing, which sat badly against the flat palette, the 0px
+   radius and the hard-snapping colour states. Cutting it also drops the
+   `overlay`/`display` allow-discrete plumbing the fade-out needed. */
 .detail[open] {
   display: flex;
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-@starting-style {
-  .detail[open] {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
 }
 
 .detail::backdrop {
   background: rgb(0 0 0 / 0.6);
   backdrop-filter: blur(4px);
-  opacity: 0;
-  transition: opacity var(--motion-lg);
-}
-
-.detail[open]::backdrop {
-  opacity: 1;
 }
 
 /* Drop the travel, keep the colour fades -- reduced motion asks for no
@@ -506,11 +489,6 @@ html:has(dialog[open]) {
   .card:focus-visible,
   .card:active {
     transform: none;
-  }
-
-  .detail,
-  .detail::backdrop {
-    transition: none;
   }
 }
 
