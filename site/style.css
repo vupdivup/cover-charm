@@ -52,6 +52,7 @@ html[data-theme="dark"] {
    noise tile that is not perceptible in motion. */
 html {
   height: 100%;
+  scrollbar-gutter: stable;
   background: var(--bg) var(--noise);
   background-blend-mode: var(--noise-blend);
 
@@ -389,6 +390,17 @@ main {
 }
 
 /* ---------- dialog ---------- */
+
+/* A modal <dialog> makes the page behind it inert to clicks but not to
+   scrolling, so the grid still scrolled under the detail/intro dialog
+   (touch drags and the wheel both). Lock the root scroller while one is
+   open; `overflow: hidden` keeps the scroll offset, so the grid is
+   right where it was on close. `scrollbar-gutter: stable` on the root
+   reserves the scrollbar's width at all times, so the lock doesn't
+   widen the page by a scrollbar and shift the layout underneath. */
+html:has(dialog[open]) {
+  overflow: hidden;
+}
 
 .detail {
   flex-direction: column;
