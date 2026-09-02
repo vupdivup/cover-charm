@@ -32,11 +32,14 @@
      the darkened accent is written once instead of per-control. */
   --accent-strong: color-mix(in srgb, var(--accent) 85%, black);
 
-  /* One timing for the one thing on the page that moves: the card's
-     lift. Everything else snaps -- colour states, and the dialog, which
-     cuts straight in. A full `<duration> <easing>` value so it drops
-     straight into a `transition` shorthand list. */
+  /* One timing language for the two things on the page that move.
+     --motion is the card's lift; --motion-lg the dialog, which travels
+     further and so reads better slightly slower. Colour states -- every
+     hover, press, focus and selection -- take neither: they snap. Both
+     are full `<duration> <easing>` values so they drop straight into a
+     `transition` shorthand list. */
   --motion: 0.15s ease;
+  --motion-lg: 0.18s ease;
 }
 
 /* Screen instead of multiply, and a little less of it: lightening
@@ -102,7 +105,7 @@ body {
    transparent and a thick inset outline takes over, so focus never
    nudges layout (outline sits outside the box model) or doubles up
    with a control's own border. */
-:is(.icon-btn, .search input, .search__clear, .card, .detail__close, .snippet__tabs button, .copy-btn, .site-footer a, .detail__body, .snippet__panel pre):focus-visible {
+:is(.icon-btn, .search input, .search__clear, .card, .detail__close, .snippet__tabs button, .copy-btn, .intro__dismiss, .site-footer a, .detail__body, .snippet__panel pre):focus-visible {
   border-color: transparent;
   outline: 2px solid var(--border);
   outline-offset: -2px;
@@ -247,9 +250,15 @@ body {
    the tap. :active carries the press feedback instead -- it holds only
    while the finger is down, so a tap flashes the accent and releases
    it. Coarse pointers get :active plus :focus-visible, which a tap
-   never triggers. */
+   never triggers.
+
+   `.pressed` is :active's stand-in on touch, set from pointerdown in
+   app.js: mobile engines defer :active while they decide whether the
+   touch is a scroll, so a quick tap ends before the state ever paints.
+   Same declarations, held a minimum beat by the JS. */
 .icon-btn:focus-visible,
-.icon-btn:active {
+.icon-btn:active,
+.icon-btn.pressed {
   color: var(--accent-fg);
   background: var(--accent);
 }
@@ -311,7 +320,8 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
 }
 
 .search__clear:hover,
-.search__clear:active {
+.search__clear:active,
+.search__clear.pressed {
   color: var(--fg);
 }
 
@@ -503,20 +513,38 @@ html:has(dialog[open]) {
   color: var(--fg);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  /* `overlay` and `display` need allow-discrete so the dialog stays in
+     the top layer and stays displayed for the length of the fade-out;
+     without them it is removed on the first frame and there is nothing
+     left to animate. */
+  transition: opacity var(--motion-lg), transform var(--motion-lg), overlay 0.18s allow-discrete, display 0.18s allow-discrete;
 }
 
-/* The dialog cuts in, it doesn't ease in: no fade, no rise, no scale.
-   A softening entrance was the one thing on the page still apologising
-   for appearing, which sat badly against the flat palette, the 0px
-   radius and the hard-snapping colour states. Cutting it also drops the
-   `overlay`/`display` allow-discrete plumbing the fade-out needed. */
 .detail[open] {
   display: flex;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@starting-style {
+  .detail[open] {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
 }
 
 .detail::backdrop {
   background: rgb(0 0 0 / 0.6);
   backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity var(--motion-lg);
+}
+
+.detail[open]::backdrop {
+  opacity: 1;
 }
 
 /* Drop the travel, keep the colour fades -- reduced motion asks for no
@@ -530,77 +558,127 @@ html:has(dialog[open]) {
   .card:active {
     transform: none;
   }
+
+  .detail,
+  .detail::backdrop {
+    transition: none;
+  }
 }
 
 .intro {
   width: min(420px, 92vw);
 }
 
-.intro .detail__body {
-  padding: 1.75rem;
-}
-
-.intro h2 {
-  margin: 0 0 0.3rem;
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+/* Occupies the detail dialog's media slot, and takes its ground too:
+   the recessed --bg + grain against the elevated body below, same as
+   .detail__media. Without it the panel was one flat surface, the only
+   dialog on the page not built from the two grounds. */
+.intro__bar {
+  flex-shrink: 0;
+  padding: 1rem 1.5rem;
+  background: var(--bg) var(--noise);
+  background-blend-mode: var(--noise-blend);
+  border-bottom: var(--border-width) solid var(--border);
 }
 
 .intro__lede {
-  margin: 0 0 1.4rem;
+  margin: 0 0 1.1rem;
   font-size: 0.9rem;
 }
 
+/* The wordmark again, so it takes the header <h1>'s display face and
+   letter-spacing rather than the mono used for content headings like
+   #detail-title. Slightly smaller: it sits in a dialog, not the page
+   head. */
+.intro h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* One ink box with hairline-separated rows, matching the snippet
+   panel's full border rather than floating in open space. */
 .intro__steps {
   list-style: none;
-  margin: 0 0 1.5rem;
+  margin: 0 0 1.25rem;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
 }
 
+/* stretch, not center: the icon cell carries the row's vertical rule,
+   so it has to be as tall as the row -- centred, its border stopped
+   short of the row edges as soon as the text wrapped to two lines. */
 .intro__steps li {
   display: flex;
-  align-items: center;
-  gap: 0.8rem;
+  align-items: stretch;
   font-size: 0.9rem;
 }
 
-.intro__steps svg {
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  padding: 0.4rem;
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  color: var(--accent);
+.intro__steps li + li {
+  border-top: var(--border-width) solid var(--border);
 }
 
+.intro__steps li span {
+  padding: 0.7rem 0.8rem;
+}
+
+/* Ink, not accent: the old chips carried a 14% accent wash, the only
+   translucent accent on a page where accent is a full fill or nothing.
+   The chip is now a bordered cell like every other box. */
+.intro__steps svg {
+  flex-shrink: 0;
+  box-sizing: content-box;
+  width: 20px;
+  /* auto height lets the stretch above take effect (a fixed cross-size
+     ignores it); the glyph keeps its square via preserveAspectRatio and
+     centres itself in whatever height the row ends up. */
+  height: auto;
+  min-height: 20px;
+  padding: 0.7rem;
+  border-right: var(--border-width) solid var(--border);
+  color: var(--fg);
+}
+
+.intro__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.intro__outro {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* A snippet tab's box, but accent-filled at rest -- the one control on
+   the page that is filled without being interacted with. It earns that
+   the way a selected tab does: it is the panel's single action, and at
+   this size it reads as a marker rather than the full-width slab the
+   old dismiss was. Keeps the ink border like every other filled state,
+   so the box matches an empty one. */
 .intro__dismiss {
-  /* Spelled out like every other control (the UA button styling it
-     used to inherit ignored --border-width and --radius): reset
-     appearance, then borrow the same border, radius and font. */
-  display: block;
-  width: 100%;
+  flex-shrink: 0;
   appearance: none;
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius);
-  text-align: center;
-  padding: 0.6rem;
   background: var(--accent);
   color: var(--accent-fg);
+  padding: 0.35rem 1.25rem;
   font: inherit;
-  font-weight: 600;
+  font-size: 0.8rem;
+  text-align: center;
   cursor: pointer;
 }
 
-/* Already accent-filled, so it darkens instead of flashing accent --
-   but on the same trio of states as every other control. */
+/* Already filled, so it darkens on press instead of flashing accent --
+   same trio of states as every other control. */
 .intro__dismiss:focus-visible,
-.intro__dismiss:active {
+.intro__dismiss:active,
+.intro__dismiss.pressed {
   background: var(--accent-strong);
 }
 
@@ -632,7 +710,8 @@ html:has(dialog[open]) {
 }
 
 .detail__close:focus-visible,
-.detail__close:active {
+.detail__close:active,
+.detail__close.pressed {
   color: var(--accent);
 }
 
@@ -797,9 +876,14 @@ html:has(dialog[open]) {
     aspect-ratio: 4 / 3;
   }
 
-  .detail__body {
+  .detail__body,
+  .intro__bar {
     /* Claw back horizontal room for the snippet tabs and code line. */
     padding-inline: 1rem;
+  }
+
+  .intro__steps li span {
+    padding-inline: 0.6rem;
   }
 
   .snippet__tabs button {
