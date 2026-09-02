@@ -19,7 +19,8 @@
      multiply darkens the light ground, screen lightens the dark one.
      Strength is the rect's opacity, so each theme gets its own URI. */
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0' intercept='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.22'/%3E%3C/svg%3E");
-  --shadow: light-dark(0 8px 24px -12px rgb(0 0 0 / 0.25), 0 8px 24px -12px rgb(0 0 0 / 0.6));
+  /* One shadow, for the one thing that floats over the page. The
+     card's lift shadow went with the lift. */
   --shadow-lg: light-dark(0 24px 60px -20px rgb(0 0 0 / 0.35), 0 24px 60px -20px rgb(0 0 0 / 0.8));
   --border-width: 1px;
   --radius: 0px;
@@ -32,14 +33,11 @@
      the darkened accent is written once instead of per-control. */
   --accent-strong: color-mix(in srgb, var(--accent) 85%, black);
 
-  /* One timing language for the two things on the page that move.
-     --motion is the card's lift; --motion-lg the dialog, which travels
-     further and so reads better slightly slower. Colour states -- every
-     hover, press, focus and selection -- take neither: they snap. Both
-     are full `<duration> <easing>` values so they drop straight into a
-     `transition` shorthand list. */
-  --motion: 0.15s ease;
-  --motion-lg: 0.18s ease;
+  /* No motion variables, deliberately: nothing on the page moves or
+     fades any more. Every state the page can be in -- a control's
+     hover/press/focus, a tab's selection, a dialog opening -- lands in
+     one frame. Feedback is carried entirely by colour, so a filled box
+     appearing *is* the acknowledgement. */
 }
 
 /* Screen instead of multiply, and a little less of it: lightening
@@ -111,14 +109,12 @@ body {
   outline-offset: -2px;
 }
 
-/* One interaction language, and it is a hard one: every colour state a
-   control takes -- icon-button hover, tab selection, press, focus --
-   snaps with no transition, matching the flat two-colour palette and
-   the 0px radius. Motion is reserved for the two things that travel:
-   the card's lift and the dialog's entrance, below. The dialog is the
-   deliberate exception to the hard language -- a control recolouring in
-   place can snap, but a panel arriving over the whole page reads as
-   abrupt without one. */
+/* One interaction language, and it is a hard one: every state the page
+   takes -- icon-button hover, tab selection, press, focus, a dialog
+   opening -- snaps with no transition, matching the flat two-colour
+   palette and the 0px radius. Nothing travels and nothing fades; a
+   control answers a pointer by filling with accent, and a panel answers
+   a click by simply being there. */
 
 .icon-sprite {
   position: absolute;
@@ -392,13 +388,6 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: var(--grid-gap);
-  overflow: hidden;
-  /* Top row's hover/focus lift (translateY(-3px)) plus its outline
-     poke above the grid's own box, which this overflow:hidden then
-     clips. Pad + negative margin gives the lift room without moving
-     the grid's visible position. */
-  padding-top: 4px;
-  margin-top: -4px;
 }
 
 @media (max-width: 480px) {
@@ -422,28 +411,27 @@ main {
   text-align: left;
   color: inherit;
   font: inherit;
+  /* Whole card, not just the art: a long press landing on the title
+     text is the other gesture that can turn into a selection and end
+     the hold. */
+  -webkit-touch-callout: none;
+  user-select: none;
 
   /* 500+ items: skip layout/paint work while offscroll */
   content-visibility: auto;
   contain-intrinsic-size: 260px;
-
-  /* The one control that moves rather than just recolouring, so it is
-     also the one that gets a transition. */
-  transition: transform var(--motion), box-shadow var(--motion);
 }
 
-.card:focus-visible,
-.card:active {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-}
-
-@media (hover: hover) {
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow);
-  }
-}
+/* No press, hover or focus fill on the card, deliberately -- it is the
+   one control on the page with no pointer state of its own. The old lift
+   + shadow went with the page's motion, and the ground that replaced it
+   was worse in both directions: painted on the way down it flashed under
+   every scroll that started on a card, which is every scroll; painted on
+   release it landed in the same frame as the panel that covers it, so it
+   read as lag rather than feedback. The panel *is* the acknowledgement,
+   and it now arrives in one frame. Hover already answers on the desktop
+   by starting the GIF, and keyboard focus keeps the shared inset
+   outline. */
 
 .card__media {
   aspect-ratio: 1 / 1;
@@ -456,6 +444,15 @@ main {
   height: 100%;
   object-fit: cover;
   display: block;
+
+  /* A press held on a card is how touch asks the GIF to play, and it
+     has to be able to last. Left alone, the engine treats a ~1s hold on
+     an <img> as a drag / image callout instead, and the drag ghost
+     interrupts the animation. Refuse the drag and the long-press menu
+     so the hold is only ever a hold. */
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .card__body {
@@ -516,57 +513,27 @@ html:has(dialog[open]) {
   color: var(--fg);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
-
-  opacity: 0;
-  transform: translateY(12px) scale(0.98);
-  /* `overlay` and `display` need allow-discrete so the dialog stays in
-     the top layer and stays displayed for the length of the fade-out;
-     without them it is removed on the first frame and there is nothing
-     left to animate. */
-  transition: opacity var(--motion-lg), transform var(--motion-lg), overlay 0.18s allow-discrete, display 0.18s allow-discrete;
 }
 
+/* The panel appears and disappears in one frame -- no fade, no rise, no
+   `@starting-style` or `allow-discrete` plumbing to hold it in the top
+   layer on the way out, because there is no way out to animate. On a
+   card the panel is the whole of the feedback -- the card itself takes
+   no press state -- so the one thing it owes the tap is to be there in
+   the frame the finger lifts. */
 .detail[open] {
   display: flex;
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-@starting-style {
-  .detail[open] {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
 }
 
 .detail::backdrop {
   background: rgb(0 0 0 / 0.6);
   backdrop-filter: blur(4px);
-  opacity: 0;
-  transition: opacity var(--motion-lg);
 }
 
-.detail[open]::backdrop {
-  opacity: 1;
-}
-
-/* Drop the travel, keep the colour fades -- reduced motion asks for no
-   movement, not for instant state changes. The card kept its lift under
-   the old rule because only :hover was overridden, so a focus or a tap
-   still moved it. */
-@media (prefers-reduced-motion: reduce) {
-  .card,
-  .card:hover,
-  .card:focus-visible,
-  .card:active {
-    transform: none;
-  }
-
-  .detail,
-  .detail::backdrop {
-    transition: none;
-  }
-}
+/* Nothing here moves or fades any more, so there is nothing for a
+   reduced-motion override to turn off -- the page is already what that
+   preference asks for. app.js still honours it for the animated GIF
+   previews, which is the only motion left. */
 
 .intro {
   width: min(420px, 92vw);
@@ -804,9 +771,8 @@ html:has(dialog[open]) {
 /* No hover or press state, deliberately: in a tablist the accent fill
    *is* the selected state, and any pointer state near it read as a
    second selection. The tab's feedback is the selection itself, which
-   fades in over --motion like every other accent change on the page --
-   so it matches the icon buttons in timing without competing with them
-   in meaning. Keyboard focus is covered by the shared inset outline. */
+   snaps in like every other accent change on the page. Keyboard focus
+   is covered by the shared inset outline. */
 .snippet__tabs button[aria-selected="true"] {
   background: var(--accent);
   color: var(--accent-fg);

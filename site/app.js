@@ -59,8 +59,23 @@ init();
 const PRESS_SELECTOR = ".icon-btn, .intro__dismiss, .detail__close, .search__clear";
 const PRESS_MS = 120;
 
+// contextmenu carries no pointer type, so remember what opened it.
+let lastPointerType = "mouse";
+
 function wirePressState() {
+  // `-webkit-touch-callout` is Safari's alone: Chrome still opens its
+  // image context menu on a long press, which ends the hold that is
+  // playing the card's GIF. Cancelling the event is the only way to
+  // refuse it. Gated on a touch press so a desktop right-click keeps
+  // its menu (and its "save image as").
+  document.addEventListener("contextmenu", (event) => {
+    if (lastPointerType === "mouse") return;
+    if (event.target.closest(".card")) event.preventDefault();
+  });
+
   document.addEventListener("pointerdown", (event) => {
+    lastPointerType = event.pointerType;
+
     // Mouse :active works as advertised; leave the desktop untouched.
     if (event.pointerType === "mouse") return;
 
@@ -75,11 +90,29 @@ function wirePressState() {
     // would leave the state stuck on. Held to a minimum beat so the
     // flash is visible even on a tap shorter than PRESS_MS.
     const release = () => {
+      done();
       const held = performance.now() - start;
       setTimeout(() => control.classList.remove("pressed"), Math.max(0, PRESS_MS - held));
     };
-    addEventListener("pointerup", release, { once: true });
-    addEventListener("pointercancel", release, { once: true });
+
+    // A scroll that starts on a control fires pointercancel instead of
+    // pointerup, and it isn't a press: drop the state immediately
+    // rather than holding it for the minimum beat. Matters most for the
+    // cards, since every drag down the grid starts on one.
+    const cancel = () => {
+      done();
+      control.classList.remove("pressed");
+    };
+
+    // Only one of the two ever fires, so `once` would leave the other
+    // registered for the life of the page -- one more per tap.
+    const done = () => {
+      removeEventListener("pointerup", release);
+      removeEventListener("pointercancel", cancel);
+    };
+
+    addEventListener("pointerup", release);
+    addEventListener("pointercancel", cancel);
   });
 }
 
@@ -189,6 +222,10 @@ function buildCard(album) {
   media.className = "card__media";
 
   const img = document.createElement("img");
+  // Belt to the CSS's braces: `-webkit-user-drag` is WebKit/Blink only,
+  // and a drag started on the artwork cancels the hold that is playing
+  // the GIF. The attribute covers the engines that ignore the property.
+  img.draggable = false;
   img.loading = "lazy";
   img.decoding = "async";
   img.src = previewUrl;
