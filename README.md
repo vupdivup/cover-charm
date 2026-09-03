@@ -41,3 +41,22 @@ control logging verbosity on every command.
 `docker compose up -d` starts Postgres, MinIO, and pgweb for
 `wubwub studio` -- see `src/wubwub/studio/README.md` for details and
 `.env.example` for the environment variables to override.
+
+## License
+
+The code in this repository -- `src/`, `site/`, `sql/`, and the
+tooling around them -- is MIT licensed; see [LICENSE](LICENSE). The
+Blender scene the renders are built from is the author's own work and
+falls under the same terms if it is ever committed (`.blend` files are
+gitignored, so the repository currently carries none).
+
+Album cover art is **not** covered by that license and is not the
+author's to relicense. Covers come from the [Cover Art
+Archive](https://coverartarchive.org/), which passes on no rights to
+downstream users -- each image stays with its respective rights
+holder, and the GIFs rendered from them are derivative and carry the
+same restriction. Neither the covers nor the GIFs live in this branch:
+`wubwub studio publish` / `deploy` push them to the orphan `assets`
+and `assets-dev` branches, and the showcase site serves them from
+there over jsDelivr for identification and to demonstrate the render
+pipeline, non-commercially.

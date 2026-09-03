@@ -3,6 +3,8 @@ name = "wubwub"
 version = "0.1.0"
 description = "Fetch album cover art, render it through a Blender animation, and publish the results"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "vupdivup", email = "vnmatt2003@gmail.com" }
 ]
