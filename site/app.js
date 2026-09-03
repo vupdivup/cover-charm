@@ -165,13 +165,12 @@ async function init() {
     return;
   }
 
-  albums.sort((a, b) => {
-    return (
-      a.artist.localeCompare(b.artist) ||
-      (a.year ?? 0) - (b.year ?? 0) ||
-      a.title.localeCompare(b.title)
-    );
-  });
+  // Randomized so the grid isn't always fronted by the same handful of
+  // albums; fresh on every load rather than pinned to a session, since
+  // the page has no reload path a user hits often enough for that
+  // stability to matter (search filters in place, the detail dialog
+  // never navigates).
+  shuffle(albums);
 
   const fuse = new Fuse(albums, {
     keys: [
@@ -192,6 +191,14 @@ async function init() {
   if (initialQuery) {
     searchInput.value = initialQuery;
     applyFilter(initialQuery, albums, fuse, cards);
+  }
+}
+
+// Fisher-Yates, in place.
+function shuffle(items) {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
   }
 }
 
