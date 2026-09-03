@@ -248,6 +248,9 @@ function buildCard(album) {
 
   const activate = () => setHot(img, gifUrl);
   const deactivate = () => {
+    // Clearing `want` first is what cancels a GIF still in flight: the
+    // preload below only writes to an img that still asks for it.
+    delete img.dataset.want;
     if (img.src === gifUrl) img.src = previewUrl;
   };
 
@@ -267,7 +270,15 @@ function buildCard(album) {
 
 function setHot(img, gifUrl) {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  if (img.src !== gifUrl) img.src = gifUrl;
+
+  // `dataset.want` records what this img should end up showing, and is
+  // the only thing that authorizes the swap below. Assigning the GIF to
+  // the live img directly would drop the decoded preview the same
+  // frame, leaving the card a hole for the whole download -- GIFs are
+  // the heavy asset, so that gap is seconds on a slow connection.
+  // Loading it detached instead lets the preview hold the box until
+  // there is a decoded frame to put in its place.
+  img.dataset.want = gifUrl;
 
   const idx = hotCards.indexOf(img);
   if (idx !== -1) hotCards.splice(idx, 1);
@@ -278,8 +289,23 @@ function setHot(img, gifUrl) {
     // Each img's own preview, not the just-activated card's — reverting
     // to the wrong URL here showed a stale card frozen on another
     // album's art after fast navigation evicted it.
+    delete stale.dataset.want;
     if (stale.src !== stale.dataset.preview) stale.src = stale.dataset.preview;
   }
+
+  if (img.src === gifUrl) return;
+  loadThen(gifUrl, () => {
+    if (img.dataset.want === gifUrl) img.src = gifUrl;
+  });
+}
+
+// Pull a URL into the image cache without touching anything on screen,
+// then hand control back. The callback is skipped on failure: leaving
+// whatever is already displayed beats blanking to a broken image.
+function loadThen(url, onReady) {
+  const loader = new Image();
+  loader.onload = onReady;
+  loader.src = url;
 }
 
 function wireSearch(albums, fuse, cards) {
@@ -368,7 +394,16 @@ function openDetail(album, gifUrl, card, deactivate) {
   openerCard = card;
   openerDeactivate = deactivate;
 
-  detailImg.src = gifUrl;
+  // Seed with the static frame the grid has almost certainly cached
+  // already, then swap once the GIF has decoded. Assigning the GIF cold
+  // left the dialog's 16:9 box empty for the length of the download,
+  // with the artwork sitting in cache one URL away. Same `want` guard
+  // as the cards: opening another album mid-download must win.
+  detailImg.dataset.want = gifUrl;
+  detailImg.src = `${BASE}/${album.preview}`;
+  loadThen(gifUrl, () => {
+    if (detailImg.dataset.want === gifUrl) detailImg.src = gifUrl;
+  });
   detailImg.alt = `${album.artist} — ${album.title}`;
   detailTitle.textContent = album.title;
   detailSub.textContent = album.year ? `${album.artist} · ${album.year}` : album.artist;
