@@ -463,6 +463,14 @@ main {
   object-fit: cover;
   display: block;
 
+  /* Hide the alt text's *rendering*, not the attribute: a browser paints
+     alt in the inherited colour while the image has no pixels, so on a
+     slow connection every card spent the download showing its artist and
+     title, then flickered as the art replaced them. The attribute stays
+     for the accessibility tree. Trade-off: an image that never arrives
+     shows an empty box rather than its alt. */
+  color: transparent;
+
   /* A press held on a card is how touch asks the GIF to play, and it
      has to be able to last. Left alone, the engine treats a ~1s hold on
      an <img> as a drag / image callout instead, and the drag ghost
@@ -735,6 +743,8 @@ html:has(dialog[open]) {
   height: 100%;
   object-fit: contain;
   display: block;
+  /* Same reason as `.card__media img`. */
+  color: transparent;
 }
 
 /* Sits over the media rather than in the body: the snippet block below
