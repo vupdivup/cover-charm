@@ -99,6 +99,15 @@ body {
   color: var(--fg-muted);
 }
 
+/* Catch-all first, so nothing focusable can fall through to the UA's
+   default blue ring -- including elements the browser makes focusable on
+   its own, like a scrollable region. The enumerated rule below only adds
+   what a bordered control needs on top. */
+:focus-visible {
+  outline: 2px solid var(--border);
+  outline-offset: -2px;
+}
+
 /* Shared focus style for every interactive control: any border goes
    transparent and a thick inset outline takes over, so focus never
    nudges layout (outline sits outside the box model) or doubles up
@@ -107,6 +116,15 @@ body {
   border-color: transparent;
   outline: 2px solid var(--border);
   outline-offset: -2px;
+}
+
+/* The dialogs take focus themselves on open (see the `autofocus` note in
+   index.html), but a panel is a container, not a control: no ring, and
+   `tabindex="-1"` keeps it out of the tab order, so the first Tab from
+   an opened dialog lands on its close button as before. */
+.detail:focus,
+.detail:focus-visible {
+  outline: none;
 }
 
 /* One interaction language, and it is a hard one: every state the page

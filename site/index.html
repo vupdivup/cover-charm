@@ -119,7 +119,13 @@
     <div id="grid" class="grid" aria-live="polite"></div>
   </main>
 
-  <dialog id="intro" class="detail intro">
+  <!-- `autofocus` on the dialog itself, not on a control inside it:
+       without it `showModal()` hands focus to the first focusable child,
+       which is the corner X, so the panel opens offering the way out.
+       `tabindex="-1"` only makes the dialog a legal focus target for
+       that -- it stays out of the tab order, and the ring is suppressed
+       in style.css because a panel is not a control. -->
+  <dialog id="intro" class="detail intro" tabindex="-1" autofocus>
     <form method="dialog" class="detail__close-form">
       <button type="submit" class="detail__close" aria-label="Close">
         <svg class="icon" width="20" height="20" aria-hidden="true"><use href="#icon-x"/></svg>
@@ -162,7 +168,7 @@
     </div>
   </dialog>
 
-  <dialog id="detail" class="detail">
+  <dialog id="detail" class="detail" tabindex="-1" autofocus>
     <form method="dialog" class="detail__close-form">
       <button type="submit" class="detail__close" aria-label="Close">
         <svg class="icon" width="20" height="20" aria-hidden="true"><use href="#icon-x"/></svg>
