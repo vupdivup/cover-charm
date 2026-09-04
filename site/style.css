@@ -595,17 +595,16 @@ html:has(dialog[open]) {
 }
 
 /* One ink box with hairline-separated rows, matching the snippet
-   panel's full border rather than floating in open space -- and its
-   recessed ground too. Without the fill the box sat on the dialog
-   body's own surface, so the only thing separating the rows from the
-   panel was the hairline, and the table read flat. */
+   panel's full border rather than floating in open space. No fill: the
+   box sits on the dialog body's own surface, and the rows are carried
+   by the hairlines and the bolded verb in each one rather than by a
+   second ground. */
 .intro__steps {
   list-style: none;
   margin: 0 0 1.25rem;
   padding: 0;
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius);
-  background: var(--bg);
 }
 
 /* stretch, not center: the icon cell carries the row's vertical rule,
