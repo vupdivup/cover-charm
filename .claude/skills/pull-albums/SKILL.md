@@ -2,15 +2,15 @@
 name: pull-albums
 description: >
   Pull a JSON album list for any time period — a year, a month, a range
-  of years, a decade — split evenly between mainstream-popular and
-  critically-acclaimed albums. Use when the user asks to pull albums for
-  a period, wants a best-of list for a span of time, needs a seed list
-  for an era, or invokes /pull-albums.
-  Args: <period> [count].
+  of years, a decade — split between mainstream-popular and
+  critically-acclaimed albums (60/40 by default). Use when the user
+  asks to pull albums for a period, wants a best-of list for a span of
+  time, needs a seed list for an era, or invokes /pull-albums.
+  Args: <period> [count] [mainstream%].
 ---
 
-Build a JSON album list for `<period>`, split evenly between mainstream
-hits and critics' picks.
+Build a JSON album list for `<period>`, split between mainstream hits
+and critics' picks.
 
 ## 1. Parse the period
 
@@ -28,17 +28,31 @@ the user** before searching (e.g. "late 80s → 1986-01-01 to
 If the phrase is genuinely ambiguous (e.g. a bare `05`), ask instead of
 guessing.
 
-An album belongs to the period if its **original release date** falls
-inside it — never a reissue/anniversary-edition date.
+**An album belongs to the period if its original release date falls
+inside it — never a reissue or anniversary-edition date.** This governs
+both membership and the `release_year` field, and it is the rule most
+easily lost when a source reports chart dates instead.
 
-## 2. Parse count
+## 2. Parse count and split
 
-Optional, default 20. Half mainstream, half critics. If odd, mainstream
-gets the extra slot.
+Count optional, default 20. Split optional, default 60 (percent
+mainstream, remainder critics) — e.g. `2015 40 50` means count 40, an
+even split. Compute `mainstream = round(count * split / 100)`,
+`critics = count - mainstream`, so mainstream takes the remainder slot
+on a non-integer split.
 
 ## 3. Search, by period length
 
-Fetch source pages — don't trust search snippets alone.
+Fetch source pages — don't trust search snippets alone. Every WebFetch
+prompt must ask for only `title | artist | year` rows, capped at
+roughly 2x the needed count, and nothing else — a ranked page's full
+prose is expensive to carry and unnecessary once reduced to that.
+
+Fire candidate sources **in parallel, in one message**, rather than
+probing one at a time. Dead sources are common (paywalls, 403s, pages
+that truncate) and a failed fetch costs almost nothing, so batching
+several candidates and keeping whichever responds is much faster than
+a serial chain of retries.
 
 - **Month or shorter** — mainstream: weekly Billboard 200 / official
   chart entries within the window. Critics: individual reviews and
@@ -54,7 +68,7 @@ Fetch source pages — don't trust search snippets alone.
   strong prior-year Q4, half or more is normal, not a bug. Backfill
   down the chart until the mainstream half is full, and supplement with
   that year's Billboard 200 #1s and other big sellers if the chart runs
-  dry. State the carryover drop count in the report (step 8).
+  dry. State the carryover drop count in the report (step 7).
 
   Critics: try, in order, until one yields enough entries —
   1. Metacritic / AOTY aggregate year-end ranking, filtered to the
@@ -67,14 +81,15 @@ Fetch source pages — don't trust search snippets alone.
 
   If a source is unreachable (403, dead link, etc.), say so in the
   report and name the substitute used — don't swap tiers silently.
-- **Multiple years / a decade** — prefer a published best-of-decade or
-  best-of-era ranking where one exists (Pitchfork, Rolling Stone,
-  Metacritic) for critics; best-selling/most-streamed-of-the-decade
-  rankings for mainstream. If no aggregate exists, fall back to
-  per-year lists — applying the same year-end carryover filter and
-  critic-source ladder above to each constituent year — and **spread
-  picks across the constituent years** rather than letting one year
-  dominate. State which method was used.
+- **Multiple years / a decade** — **default to one span-wide aggregate
+  per half**: a published best-of-decade or best-of-era ranking
+  (Pitchfork, Rolling Stone, Metacritic) for critics, a
+  best-selling/most-streamed-of-the-span ranking for mainstream — one
+  page per half, not one per year. Only fall back to per-year lists
+  when no span-wide aggregate exists for that window, applying the
+  carryover filter and critic ladder above to each constituent year.
+  Either way, **spread picks across the constituent years** rather than
+  letting one year dominate. State which method was used.
 
 ## 4. Dedupe
 
@@ -87,21 +102,18 @@ ranked entry, so the total still equals `count`.
 - `title` — album title only. Strip "(Deluxe)", "(Anniversary
   Edition)", and other parenthetical reissue tags.
 - `artist` — primary credited artist, exactly as billed.
-- `release_year` — original release year (int), from step 1's
-  original-release-date rule, never reissue year.
+- `release_year` — original release year (int), per step 1.
 
-## 6. Verify the count
+## 6. Write the file
 
-Before writing anything, count each half. Assert
-`mainstream + critics == count`, and that the split matches step 2
-(mainstream takes the extra slot on an odd count). Halves drift easily
-during dedupe — don't trust the running total, recount.
+Recount both halves first — they drift during dedupe, so don't trust
+the running total. Assert `mainstream + critics == count` and that the
+halves match step 2's targets.
 
-## 7. Write the file
-
-`albums-<period-slug>.json` in the working directory unless the user
-names a path (slug mirrors the normalized period: `albums-2015.json`,
-`albums-2015-06.json`, `albums-2010-2014.json`, `albums-1990s.json`).
+Write `albums-<period-slug>.json` in the working directory unless the
+user names a path (slug mirrors the normalized period:
+`albums-2015.json`, `albums-2015-06.json`, `albums-2010-2014.json`,
+`albums-1990s.json`).
 
 A JSON array, 2-space indent, **title, artist, release_year only** — no
 rank, no source, no wrapper object:
@@ -113,22 +125,35 @@ rank, no source, no wrapper object:
 ]
 ```
 
-## 8. Report
+## 7. Report
 
-Re-read the written file first: confirm the array length equals `count`
-and every object has exactly `title`, `artist`, `release_year`. Report the verified
-number, not the intended one.
+Re-read the written file and confirm the array length equals `count`
+and every object has exactly `title`, `artist`, `release_year`. Report
+the verified number, not the intended one.
 
-Print the resolved period, the file path, the verified count, and one
-line naming the sources actually used for each half — including any
-year-end carryover drop count (step 3) and any source substitution
-(step 3). Note any album the search couldn't confirm rather than
-inventing one.
+Print the resolved period, the file path, the verified count, the split
+used (mainstream% and the two half-counts), and one line naming the
+sources actually used for each half — including the carryover drop
+count and any source substitution. Note any album the search couldn't
+confirm rather than inventing one.
 
 ## Constraints
 
 - Never fabricate an album to reach `count` — if sources yield fewer,
   say so and stop short.
 - Titles/artists must come from a fetched source, never from recall.
-- Membership is by original release date, not reissue date.
 - The output file is data only — put commentary in the chat reply.
+
+## Running several chunks
+
+A single pull runs in one context and spawns nothing. To cover several
+periods, delegate each to its own subagent with a self-contained
+prompt, a few concurrent — the chunks are independent.
+
+Use `model: sonnet`; a subagent otherwise inherits the caller's model,
+which is usually larger than fetch-and-extract work needs. Haiku
+handles the mechanics but tends to pick whichever source makes the
+carryover filter unnecessary.
+
+Never `subagent_type: "fork"` — a fork inherits the caller's context,
+including these orchestration instructions, and re-spawns its own fleet.
