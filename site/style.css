@@ -356,7 +356,7 @@ main {
 }
 
 .site-footer {
-  padding: 1.5rem clamp(1rem, 4vw, 3rem) 2.5rem;
+  padding: 0.9rem clamp(1rem, 4vw, 3rem) 1.4rem;
   border-top: var(--border-width) solid var(--border);
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   color: var(--fg-muted);
