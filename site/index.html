@@ -13,8 +13,12 @@
   <link rel="stylesheet" href="style.css" />
   <script>
     // Runs before paint so the stored/system theme applies with no flash.
+    // Every storage read is guarded: Safari throws SecurityError on
+    // localStorage when the user blocks all cookies, and an unguarded
+    // throw here leaves the document with no data-theme at all.
     (function () {
-      var stored = localStorage.getItem("theme");
+      var stored = null;
+      try { stored = localStorage.getItem("theme"); } catch (e) {}
       var theme = stored === "light" || stored === "dark"
         ? stored
         : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");

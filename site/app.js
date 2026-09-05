@@ -44,6 +44,30 @@ let currentFormat = "markdown";
 let openerCard = null;
 let openerDeactivate = null;
 
+// Safari throws SecurityError on any localStorage access when the user
+// blocks all cookies -- not just on write, and not a null return. Every
+// use here is a preference (theme, intro-seen), so losing storage should
+// cost the preference and nothing else; unguarded, the throw in
+// wireIntro() propagated out of the startup sequence below and init()
+// never ran, leaving a permanently empty grid. Declared above the calls
+// because wireIntro() reads it synchronously.
+const store = {
+  get(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // Preference just doesn't persist.
+    }
+  },
+};
+
 wirePressState();
 wireThemeToggle();
 wireIntro();
@@ -121,7 +145,7 @@ function wireThemeToggle() {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     document.documentElement.dataset.theme = next;
     document.documentElement.style.colorScheme = next;
-    localStorage.setItem("theme", next);
+    store.set("theme", next);
   });
 }
 
@@ -130,7 +154,7 @@ function wireIntro() {
     if (event.target === intro) intro.close();
   });
   intro.addEventListener("close", () => {
-    localStorage.setItem("introSeen", "1");
+    store.set("introSeen", "1");
   });
 
   // The intro auto-opens once, but it's also the only place the page
@@ -138,7 +162,7 @@ function wireIntro() {
   // it back instead of clearing storage.
   introOpen.addEventListener("click", () => intro.showModal());
 
-  if (!localStorage.getItem("introSeen")) {
+  if (!store.get("introSeen")) {
     intro.showModal();
   }
 }
@@ -325,7 +349,11 @@ function wireSearch(albums, fuse, cards) {
     const params = new URLSearchParams(location.search);
     if (value) params.set("q", value);
     else params.delete("q");
-    history.replaceState(null, "", `${location.pathname}${params.size ? `?${params}` : ""}`);
+    // `params.toString()`, not `params.size`: the latter only landed in
+    // Safari 17, where it reads `undefined` and silently drops the query
+    // string on every keystroke, so a search stopped being linkable.
+    const query = params.toString();
+    history.replaceState(null, "", `${location.pathname}${query ? `?${query}` : ""}`);
   }
 
   searchInput.addEventListener("input", () => {
@@ -478,11 +506,20 @@ async function downloadGif() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const url = URL.createObjectURL(await response.blob());
 
+    // In the document and revoked a turn later, both for WebKit: it
+    // honours `download` only on a connected anchor, and revoking the
+    // blob URL in the same task as the click cancels the save before it
+    // starts. Chromium tolerates the detached, immediately-revoked
+    // version, which is why it worked there.
     const link = document.createElement("a");
     link.href = url;
     link.download = filename;
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      link.remove();
+      URL.revokeObjectURL(url);
+    }, 0);
 
     flashDone(detailDownload, "Downloaded", "Download GIF");
   } catch {
