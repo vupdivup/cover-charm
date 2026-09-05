@@ -1,13 +1,21 @@
 :root {
   color-scheme: light dark;
 
-  --bg: light-dark(#eae8e2, #121214);
-  --bg-elevated: light-dark(#ffffff, #232327);
-  --fg: light-dark(#18181b, #ededf0);
-  --fg-muted: light-dark(#6b6b75, #9a9aa5);
-  --border: light-dark(#18181b, #ededf0);
-  --accent: light-dark(#ff2d55, #f7d716);
-  --accent-fg: light-dark(#ffffff, #18181b);
+  /* Light values bare, dark ones in the [data-theme="dark"] block below,
+     rather than a light-dark() pair per token. light-dark() is Safari
+     17.5+, and below that the whole declaration is invalid at
+     computed-value time: every consumer falls back to its initial value,
+     so the page lost its background, border and shadow colours at once.
+     The theme switch never needed it anyway -- the pre-paint script in
+     index.html always stamps data-theme, so that attribute is a complete
+     signal on its own. */
+  --bg: #eae8e2;
+  --bg-elevated: #ffffff;
+  --fg: #18181b;
+  --fg-muted: #6b6b75;
+  --border: #18181b;
+  --accent: #ff2d55;
+  --accent-fg: #ffffff;
 
   /* Grain ground, replacing the old dot grid. An SVG fractal-noise tile
      inlined as a data URI so the page stays build-free and makes no
@@ -21,7 +29,7 @@
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0' intercept='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.22'/%3E%3C/svg%3E");
   /* One shadow, for the one thing that floats over the page. The
      card's lift shadow went with the lift. */
-  --shadow-lg: light-dark(0 24px 60px -20px rgb(0 0 0 / 0.35), 0 24px 60px -20px rgb(0 0 0 / 0.8));
+  --shadow-lg: 0 24px 60px -20px rgb(0 0 0 / 0.35);
   --border-width: 1px;
   --radius: 0px;
   --font: "Fragment Mono", ui-monospace, "Courier New", monospace;
@@ -40,10 +48,19 @@
      appearing *is* the acknowledgement. */
 }
 
-/* Screen instead of multiply, and a little less of it: lightening
-   grain on a near-black ground reads stronger than the same amount
-   darkening a near-white one. */
 html[data-theme="dark"] {
+  --bg: #121214;
+  --bg-elevated: #232327;
+  --fg: #ededf0;
+  --fg-muted: #9a9aa5;
+  --border: #ededf0;
+  --accent: #f7d716;
+  --accent-fg: #18181b;
+  --shadow-lg: 0 24px 60px -20px rgb(0 0 0 / 0.8);
+
+  /* Screen instead of multiply, and a little less of it: lightening
+     grain on a near-black ground reads stronger than the same amount
+     darkening a near-white one. */
   --noise-blend: screen;
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0' intercept='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.075'/%3E%3C/svg%3E");
 }
@@ -166,6 +183,10 @@ body {
   gap: 1rem;
   padding: 1.25rem clamp(1rem, 4vw, 3rem);
   background: color-mix(in srgb, var(--bg) 88%, transparent);
+  /* Safari only shipped the unprefixed property in 18.0; without the
+     -webkit- spelling the header goes flat there and the grid scrolls
+     crisply behind it. Same for the dialog backdrop below. */
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-bottom: var(--border-width) solid var(--border);
 }
@@ -302,6 +323,11 @@ html[data-theme="dark"] #theme-toggle .icon-moon {
 
 .search input {
   width: 100%;
+  /* A searchfield keeps UA-native sizing rules in WebKit unless the
+     appearance is reset, which fights the padding that clears the two
+     icon wells. */
+  appearance: none;
+  -webkit-appearance: none;
   padding: 0.6rem 2.5rem 0.6rem 3.25rem;
   border-radius: var(--radius);
   border: var(--border-width) solid var(--border);
@@ -433,6 +459,7 @@ main {
      text is the other gesture that can turn into a selection and end
      the hold. */
   -webkit-touch-callout: none;
+  -webkit-user-select: none;
   user-select: none;
 
   /* 500+ items: skip layout/paint work while offscroll */
@@ -478,6 +505,10 @@ main {
      so the hold is only ever a hold. */
   -webkit-user-drag: none;
   -webkit-touch-callout: none;
+  /* Prefixed too: Safari only shipped unprefixed `user-select` in 17.0,
+     so on older iOS the hold selects the text under it and the
+     selection UI ends the hold this is meant to protect. */
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -553,6 +584,7 @@ html:has(dialog[open]) {
 
 .detail::backdrop {
   background: rgb(0 0 0 / 0.6);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
@@ -723,6 +755,14 @@ html:has(dialog[open]) {
 .detail__media {
   position: relative;
   flex-shrink: 0;
+  /* Explicit, not left to the column flex container's stretch: with an
+     aspect-ratio on a flex item WebKit resolves the box from the ratio
+     rather than re-stretching to the cross size, so the media sat
+     narrower than the dialog and left-aligned, with dead space beside
+     it. A definite width makes the ratio compute the height (which
+     max-height below then clamps) instead of the other way round.
+     No effect in Blink, where stretch already gave the same width. */
+  width: 100%;
   aspect-ratio: 16 / 9;
   /* On a short viewport -- a tablet held landscape, mostly -- 16:9 at
      the dialog's full width ate nearly all of the 88vh box and left the
@@ -756,7 +796,18 @@ html:has(dialog[open]) {
 }
 
 .detail__body {
-  flex: 1;
+  /* basis `auto`, not `0`: the dialog is content-sized (no height, only
+     a max-height), so its height comes from an intrinsic-size pass over
+     its children. With basis 0 and the min-height below removing the
+     content-based floor, WebKit measures this body as contributing
+     nothing and collapses the panel to its bar -- the intro dialog
+     showed as a titlebar and nothing else. Blink measures the content
+     instead, which is why it looked right there. Growing was never
+     doing any work anyway: the container is content-sized, so there is
+     no free space to grow into. */
+  flex: 1 1 auto;
+  /* Kept: it's what lets the body shrink past its content and scroll
+     once the dialog hits its max-height. */
   min-height: 0;
   padding: 1.25rem 1.5rem 1.5rem;
   overflow-y: auto;
