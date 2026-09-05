@@ -83,22 +83,20 @@ init();
 const PRESS_SELECTOR = ".icon-btn, .intro__dismiss, .detail__close, .search__clear";
 const PRESS_MS = 120;
 
-// contextmenu carries no pointer type, so remember what opened it.
-let lastPointerType = "mouse";
+// Whether the last thing the user did was type rather than point. The
+// card's focus preview needs it: WebKit and Blink disagree about whether
+// a touch-focused button matches `:focus-visible`, so that pseudo-class
+// alone can't tell a tab-stop from a tap. Starts true because a page
+// arrived at by keyboard sees no pointer event before the first Tab.
+let keyboardIntent = true;
 
 function wirePressState() {
-  // `-webkit-touch-callout` is Safari's alone: Chrome still opens its
-  // image context menu on a long press, which ends the hold that is
-  // playing the card's GIF. Cancelling the event is the only way to
-  // refuse it. Gated on a touch press so a desktop right-click keeps
-  // its menu (and its "save image as").
-  document.addEventListener("contextmenu", (event) => {
-    if (lastPointerType === "mouse") return;
-    if (event.target.closest(".card")) event.preventDefault();
+  document.addEventListener("keydown", () => {
+    keyboardIntent = true;
   });
 
   document.addEventListener("pointerdown", (event) => {
-    lastPointerType = event.pointerType;
+    keyboardIntent = false;
 
     // Mouse :active works as advertised; leave the desktop untouched.
     if (event.pointerType === "mouse") return;
@@ -254,8 +252,7 @@ function buildCard(album) {
 
   const img = document.createElement("img");
   // Belt to the CSS's braces: `-webkit-user-drag` is WebKit/Blink only,
-  // and a drag started on the artwork cancels the hold that is playing
-  // the GIF. The attribute covers the engines that ignore the property.
+  // so the attribute covers the engines that ignore the property.
   img.draggable = false;
   img.loading = "lazy";
   img.decoding = "async";
@@ -285,13 +282,29 @@ function buildCard(album) {
     if (img.src === gifUrl) img.src = previewUrl;
   };
 
-  card.addEventListener("pointerenter", activate);
-  card.addEventListener("pointerleave", deactivate);
+  // In-grid preview belongs to pointing devices and the keyboard only --
+  // a touch never starts one. Hovering costs no intent, so on a desktop
+  // the preview is free; on a phone it duplicates the tap, which opens
+  // the panel and plays the same GIF larger with the snippet beside it.
+  // It also cost more than it gave: a finger fires `pointerenter` on
+  // contact, before the browser has classified the gesture, and every
+  // scroll down the grid starts on a card. The revokes that were meant
+  // to undo that (`pointerleave` on lift, the `:hover` test on panel
+  // close) both assume a pointer that persists between events, which a
+  // finger is not, so cards were routinely left playing with nothing
+  // able to reach them again.
+  if (matchMedia("(hover: hover)").matches) {
+    card.addEventListener("pointerenter", activate);
+    card.addEventListener("pointerleave", deactivate);
+  }
   // Only keyboard focus animates: closing the dialog restores focus to
   // the card that opened it, which otherwise left that card playing
-  // with the pointer somewhere else entirely.
+  // with the pointer somewhere else entirely. `:focus-visible` is not
+  // enough to tell those apart -- WebKit matches it on a touch-focused
+  // button where Blink does not, which is how a tap ended up starting a
+  // preview on iOS that only a blur could stop.
   card.addEventListener("focus", () => {
-    if (card.matches(":focus-visible")) activate();
+    if (keyboardIntent && card.matches(":focus-visible")) activate();
   });
   card.addEventListener("blur", deactivate);
   card.addEventListener("click", () => openDetail(album, gifUrl, card, deactivate));

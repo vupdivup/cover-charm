@@ -455,10 +455,10 @@ main {
   text-align: left;
   color: inherit;
   font: inherit;
-  /* Whole card, not just the art: a long press landing on the title
-     text is the other gesture that can turn into a selection and end
-     the hold. */
-  -webkit-touch-callout: none;
+  /* Whole card, not just the art: a tap that drifts, or the second tap
+     of a double, otherwise leaves the title text selected and a
+     selection UI over the grid. Prefixed too -- Safari only shipped the
+     unprefixed property in 17.0. */
   -webkit-user-select: none;
   user-select: none;
 
@@ -498,16 +498,14 @@ main {
      shows an empty box rather than its alt. */
   color: transparent;
 
-  /* A press held on a card is how touch asks the GIF to play, and it
-     has to be able to last. Left alone, the engine treats a ~1s hold on
-     an <img> as a drag / image callout instead, and the drag ghost
-     interrupts the animation. Refuse the drag and the long-press menu
-     so the hold is only ever a hold. */
+  /* The art is the thing a cursor lands on, and dragging it out of the
+     page as a file was never one of the gestures here -- on the desktop
+     that ghost also crosses the card it was previewing. The long-press
+     menu is deliberately left alone now that touch no longer holds to
+     play: with no gesture of the page's own to protect, a press on an
+     image should do what the platform says it does. */
   -webkit-user-drag: none;
-  -webkit-touch-callout: none;
-  /* Prefixed too: Safari only shipped unprefixed `user-select` in 17.0,
-     so on older iOS the hold selects the text under it and the
-     selection UI ends the hold this is meant to protect. */
+  /* Prefixed too: Safari only shipped the unprefixed property in 17.0. */
   -webkit-user-select: none;
   user-select: none;
 }
