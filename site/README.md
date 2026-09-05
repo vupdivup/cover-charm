@@ -55,10 +55,14 @@ runtime.
 
 ## Behavior notes
 
-- Grid cards show the static `preview`; hovering/focusing a card swaps
-  in the animated `gif`. Only the last ~12 hovered cards keep an
+- Grid cards show the static `preview`; hovering or keyboard-focusing a
+  card swaps in the animated `gif`. Only the last ~12 such cards keep an
   animated GIF loaded at a time, to bound memory at large catalog
   sizes.
+- In-grid preview is for pointing devices and the keyboard only. Touch
+  has no hover state to end the preview with, so a tap opens the detail
+  panel instead, which plays the same GIF larger alongside the snippet
+  and download.
 - Search is fuzzy (Fuse.js) over artist + title, debounced, and
   mirrored to `?q=` so a search is linkable/shareable.
 - Filtering hides/shows existing cards rather than re-rendering, so
